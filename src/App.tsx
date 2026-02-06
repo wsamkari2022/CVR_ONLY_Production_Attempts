@@ -51,7 +51,7 @@ import StudyCompletePage from './pages/StudyCompletePage';
 
 function App() {
   return (
-    <Router>
+    <Router basename="/VRDS_CVR">
       <Routes>
         <Route path="/" element={<Navigate to="/demographics" replace />} />
         <Route path="/demographics" element={<DemographicPage />} />
