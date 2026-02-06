@@ -1,5 +1,5 @@
 import { Router, Request, Response } from "express";
-import { CVRResponse } from "../models/CVRResponse";
+import { CVRResponse } from "../models/CVRResponse.js";
 
 const router = Router();
 

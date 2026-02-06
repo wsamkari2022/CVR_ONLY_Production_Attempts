@@ -1,5 +1,5 @@
 import { Router, Request, Response } from "express";
-import { ValueStability } from "../models/ValueStability";
+import { ValueStability } from "../models/ValueStability.js";
 
 const router = Router();
 

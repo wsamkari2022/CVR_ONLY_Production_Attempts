@@ -1,5 +1,5 @@
 import { Router, Request, Response } from "express";
-import { ScenarioInteraction } from "../models/ScenarioInteraction";
+import { ScenarioInteraction } from "../models/ScenarioInteraction.js";
 
 const router = Router();
 

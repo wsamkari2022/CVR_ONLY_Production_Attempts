@@ -18,6 +18,9 @@ This project is configured for production deployment at `moonlander.fit.edu/VRDS
 - `src/lib/mongoService.ts`: API base path `/VRDS_CVR`
 - `src/App.tsx`: Router basename `/VRDS_CVR`
 
+### Backend ES Modules
+The backend uses ES modules with TypeScript. All relative imports in backend files include `.js` extensions (e.g., `import { User } from "./models/User.js"`), which is required for Node.js ES module compatibility even though source files are `.ts`.
+
 ## Environment Setup
 
 ### Backend Environment Variables

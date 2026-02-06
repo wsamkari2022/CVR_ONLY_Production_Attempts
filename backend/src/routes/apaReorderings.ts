@@ -1,5 +1,5 @@
 import { Router, Request, Response } from "express";
-import { APAReordering } from "../models/APAReordering";
+import { APAReordering } from "../models/APAReordering.js";
 
 const router = Router();
 

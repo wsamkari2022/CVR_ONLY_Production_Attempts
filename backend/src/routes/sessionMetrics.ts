@@ -1,5 +1,5 @@
 import { Router, Request, Response } from "express";
-import { SessionMetrics } from "../models/SessionMetrics";
+import { SessionMetrics } from "../models/SessionMetrics.js";
 
 const router = Router();
 

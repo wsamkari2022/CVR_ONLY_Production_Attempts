@@ -1,5 +1,5 @@
 import { Router, Request, Response } from "express";
-import { ValueEvolution } from "../models/ValueEvolution";
+import { ValueEvolution } from "../models/ValueEvolution.js";
 
 const router = Router();
 

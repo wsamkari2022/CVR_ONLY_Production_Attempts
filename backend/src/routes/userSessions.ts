@@ -1,5 +1,5 @@
 import { Router, Request, Response } from "express";
-import { UserSession } from "../models/UserSession";
+import { UserSession } from "../models/UserSession.js";
 
 const router = Router();
 

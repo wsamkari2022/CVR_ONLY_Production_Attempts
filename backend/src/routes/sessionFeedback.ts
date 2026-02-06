@@ -1,5 +1,5 @@
 import { Router, Request, Response } from "express";
-import { SessionFeedback } from "../models/SessionFeedback";
+import { SessionFeedback } from "../models/SessionFeedback.js";
 
 const router = Router();
 

@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import BaselineValue from '../models/BaselineValue';
+import BaselineValue from '../models/BaselineValue.js';
 
 const router = Router();
 

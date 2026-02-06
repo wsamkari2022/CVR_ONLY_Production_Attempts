@@ -1,5 +1,5 @@
 import { Router, Request, Response } from "express";
-import { FinalDecision } from "../models/FinalDecision";
+import { FinalDecision } from "../models/FinalDecision.js";
 
 const router = Router();
 
