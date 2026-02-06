@@ -118,24 +118,47 @@
  */
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { 
-  BarChart3, 
-  Clock, 
-  RotateCcw, 
-  TrendingUp, 
-  CheckCircle2, 
-  XCircle, 
-  Eye, 
-  MessageSquare, 
-  Activity, 
-  ThumbsUp, 
-  ThumbsDown, 
+import {
+  BarChart3,
+  Clock,
+  RotateCcw,
+  TrendingUp,
+  CheckCircle2,
+  XCircle,
+  Eye,
+  MessageSquare,
+  Activity,
+  ThumbsUp,
+  ThumbsDown,
   ArrowLeft
 } from 'lucide-react';
 import { SessionDVs, TelemetryEvent } from '../types/tracking';
 import { SimulationMetrics } from '../types';
 import { TrackingManager } from '../utils/trackingUtils';
 import { MongoService } from '../lib/mongoService';
+
+// ---------- helpers: safe localStorage reads ----------
+function readArray<T = any>(key: string): T[] {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function readJSON<T = any>(key: string, fallback: T): T {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return fallback;
+    return JSON.parse(raw) as T;
+  } catch {
+    return fallback;
+  }
+}
+
 
 const ViewResultsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -310,7 +333,7 @@ const ViewResultsPage: React.FC = () => {
         }
       });
 
-      const valueOrderTrajectories: Array<{scenarioId: number, values: string[], preferenceType: string}> = [];
+      const valueOrderTrajectories: Array<{ scenarioId: number, values: string[], preferenceType: string }> = [];
 
       apaEvents.forEach(event => {
         if (event.valuesAfter && event.scenarioId !== undefined) {
@@ -342,27 +365,174 @@ const ViewResultsPage: React.FC = () => {
 
       setMetrics(calculatedMetrics);
 
+      // ---------- BUILD DEBUG TRACKING ROWS (mirror the yellow table) ----------
       const sessionId = MongoService.getSessionId();
-      const scenariosFinalDecisionLabels = JSON.parse(localStorage.getItem('ScenariosFinalDecisionLabels') || '[]');
-      const checkingAlignmentList = JSON.parse(localStorage.getItem('CheckingAlignmentList') || '[]');
-      const finalValues = JSON.parse(localStorage.getItem('finalValues') || '[]').map((v: any) => v.name || v);
-      const moralValuesReorderListForMetrics = moralValuesReorderList.map((v: string) => v.charAt(0).toUpperCase() + v.slice(1));
-      const scenario1MoralValueReordered = JSON.parse(localStorage.getItem('Scenario1_MoralValueReordered') || '[]');
-      const scenario2MoralValueReordered = JSON.parse(localStorage.getItem('Scenario2_MoralValueReordered') || '[]');
-      const scenario3MoralValueReordered = JSON.parse(localStorage.getItem('Scenario3_MoralValueReordered') || '[]');
-      const scenario3InfeasibleOptions = JSON.parse(localStorage.getItem('Scenario3_InfeasibleOptions') || '[]');
+
+      // From localStorage (these keys existed in the older UI version)
+      const scenariosFinalDecisionLabels = readArray<string>("ScenariosFinalDecisionLabels"); // e.g., ["Safety","Fairness","Nonmaleficence"]
+      const checkingAlignmentList = readArray<string>("CheckingAlignmentList");         // e.g., ["Aligned","Misaligned","Misaligned"]
+
+      // "finalValues" usually holds the top-two values array (objects with {name, matchPercentage})
+      const finalValuesRaw = readArray<any>("finalValues");
+      const finalValuesUpper = finalValuesRaw.map(v => (v?.name ?? v ?? "").toString());
+
+      // Per-scenario moral value lists (reordered lists shown in the first column)
+      const scenario1MoralValueReordered = readArray<string>("Scenario1_MoralValueReordered");
+      const scenario2MoralValueReordered = readArray<string>("Scenario2_MoralValueReordered");
+      const scenario3MoralValueReordered = readArray<string>("Scenario3_MoralValueReordered");
+
+      // Scenario-3 infeasible options (as shown in the red box)
+      const scenario3InfeasibleOptions = readArray<{ title: string; label: string; checked: boolean }>("Scenario3_InfeasibleOptions");
+
+      ////////////////////
+      //const allEvents: any[] = (window as any).__trackingEvents || [];
+      // If you have a tracking manager that logs events; otherwise remove these 6 lines and set scenarioEvents to [].
+      // let allEvents: any[] = [];
+      // try {
+      //   // If you have TrackingManager, uncomment next line and remove the try/catch.
+      //   // allEvents = TrackingManager.getAllEvents();
+      //   allEvents = (window as any).__trackingEvents || []; // fallback if you stored events globally
+      // } catch { allEvents = []; }
+
+      // We assume you already computed per-scenario details in a variable named `metrics.scenarioDetails`
+      // If your variable is named `calculatedMetrics`, use that instead: e.g., `calculatedMetrics.scenarioDetails`
+      const scenarioDetailsArr = (metrics?.scenarioDetails ?? calculatedMetrics?.scenarioDetails ?? []) as Array<{
+        scenarioId: number;
+        // ... other fields are fine; we only need scenarioId here
+      }>;
+
+      const debugRows = scenarioDetailsArr.map((scenario, index) => {
+        const scenarioId = scenario.scenarioId;
+        const decisionLabel = (scenariosFinalDecisionLabels[index] ?? "N/A").toString();
+        const alignmentStatus = (checkingAlignmentList[index] ?? "Unknown").toString();
+
+        // Choose the scenario-specific reordered list & label name (as shown in the left column)
+        let scenarioSpecificList: string[] = [];
+        let scenarioSpecificListName = "";
+        if (scenarioId === 1) { scenarioSpecificList = scenario1MoralValueReordered; scenarioSpecificListName = "Scenario1_MoralValueReordered"; }
+        else if (scenarioId === 2) { scenarioSpecificList = scenario2MoralValueReordered; scenarioSpecificListName = "Scenario2_MoralValueReordered"; }
+        else if (scenarioId === 3) { scenarioSpecificList = scenario3MoralValueReordered; scenarioSpecificListName = "Scenario3_MoralValueReordered"; }
+
+        // Events for this scenario (if you track them)
+        const scenarioEvents = allEvents.filter(e => e?.scenarioId === scenarioId);
+
+        // If you recorded a special "option_confirmed" event containing flags &  FinalTopTwoValuesBeforeUpdate
+        const confirmationEvent = scenarioEvents.find(e => e?.event === "option_confirmed");
+        const flags = confirmationEvent?.flagsAtConfirmation || {};
+
+        // FinalTopTwoValues displayed at confirmation time in the old UI
+        const finalTopTwoValues =
+          (confirmationEvent?.finalTopTwoValuesBeforeUpdate ?? finalValuesUpper ?? [])
+            .map((v: any) => (typeof v === "string" ? v : v?.name ?? ""))
+            .filter(Boolean);
+
+        const hadApaReorder = !!flags.hasReorderedValues;
+        const hadCvrYes = !!flags.cvrYesClicked;
+        const hadCvrNo = !!flags.cvrNoClicked;
+        const hadSimReorder = !!flags.simulationMetricsReorderingFlag;
+        const hadMoralReorder = !!flags.moralValuesReorderingFlag;
+
+        const cvrYesCount = scenarioEvents.filter(e => e?.event === "cvr_answered" && e?.cvrAnswer === true).length;
+        const cvrNoCount = scenarioEvents.filter(e => e?.event === "cvr_answered" && e?.cvrAnswer === false).length;
+        const apaReorders = scenarioEvents.filter(e => e?.event === "apa_reordered").length;
+        const alternativesAdded = scenarioEvents.filter(e => e?.event === "alternative_added").length;
+        const switches = Math.max(0, scenarioEvents.filter(e => e?.event === "option_selected").length - 1);
+
+        return {
+          scenarioId,
+          valueListsUsed: {
+            scenarioMoralValueReorderedName: scenarioSpecificListName,
+            scenarioMoralValueReordered: scenarioSpecificList,
+            finalTopTwoValues,
+            infeasibleOptions: scenarioId === 3 ? scenario3InfeasibleOptions : []
+          },
+          finalDecisionLabel: decisionLabel,
+          alignmentStatus,
+          flagsAtConfirmation: {
+            apaReordered: hadApaReorder,
+            cvrYes: hadCvrYes,
+            cvrNo: hadCvrNo,
+            simMetricsReordered: hadSimReorder,
+            moralValuesReordered: hadMoralReorder
+          },
+          interactionCounters: {
+            apaReorders,
+            cvrYesCount,
+            cvrNoCount,
+            alternativesAdded,
+            switches
+          }
+        };
+      });
+      ////////////////////
+      // ===== VALUE STABILITY (compute here on Results page) =====
+      try {
+        const sessionId = MongoService.getSessionId();
+
+        // Inputs we already have in localStorage or Results context
+        const decisionLabels = readArray<string>("ScenariosFinalDecisionLabels"); // ["efficiency","safety","nonmaleficence", ...]
+        const userValues = readJSON<{ explicit: string[]; implicit: string[] }>("userValues", { explicit: [], implicit: [] });
+        const finalValuesRaw = readArray<any>("finalValues"); // [{name:"Safety", matchPercentage:...}, ...]
+        const simulationTopValues = finalValuesRaw.map(v => (v?.name ?? v ?? "").toString().toLowerCase());
+
+        // If you track how many scenarios were run, prefer that length.
+        // Otherwise, fall back to however many decision labels we have.
+        const scenarioCount = (metrics?.scenarioDetails?.length ?? decisionLabels.length) || 0;
+
+        // Per-scenario rows
+        const rows = Array.from({ length: scenarioCount }).map((_, idx) => {
+          const selectedValue = (decisionLabels[idx] ?? "").toString().toLowerCase();
+          const explicitMatch = userValues.explicit.map(v => v.toLowerCase()).includes(selectedValue);
+          const implicitMatch = userValues.implicit.map(v => v.toLowerCase()).includes(selectedValue);
+          const simulationMatch = simulationTopValues.includes(selectedValue);
+
+          // Per-scenario weighted score: 40% explicit + 60% implicit (0..1 -> %)
+          const score01 = (explicitMatch ? 0.4 : 0) + (implicitMatch ? 0.6 : 0);
+          const scorePercent = Math.round(score01 * 100);
+          const stabilityStatus = scorePercent >= 60 ? "Stable" : "Unstable";
+
+          return {
+            scenarioId: idx + 1,
+            scenarioLabel: `Scenario ${idx + 1}`,
+            selectedValue, // keep lowercase for consistency; UI can format if needed
+            matches: {
+              explicitValuesMatch: explicitMatch,
+              implicitValuesMatch: implicitMatch,
+              simulationValuesMatch: simulationMatch
+            },
+            stabilityStatus,
+            scorePercent
+          };
+        });
+
+        const totalStableCount = rows.filter(r => r.stabilityStatus === "Stable").length;
+
+        // Overall score: average of the same per-scenario weighted formula (0..1 -> % with 1 decimal)
+        const overall01 =
+          rows.reduce((acc, r) => acc + ((r.matches.explicitValuesMatch ? 0.4 : 0) + (r.matches.implicitValuesMatch ? 0.6 : 0)), 0) /
+          (rows.length || 1);
+        const overallStabilityScorePercent = Number((overall01 * 100).toFixed(1));
+
+        // Save to its own collection
+        await MongoService.insertValueStability({
+          session_id: sessionId,
+          overallStabilityScorePercent,
+          weights: { explicitWeight: 0.40, implicitWeight: 0.60 },
+          scenarios: rows,
+          summary: { totalStableCount, totalScenarios: rows.length }
+        });
+      } catch (e) {
+        console.error("insertValueStability failed:", e);
+      }
+      // ===== END VALUE STABILITY =====
+
+
+      //////////////////
 
       await MongoService.insertSessionMetrics({
         session_id: sessionId,
         ...calculatedMetrics,
-        scenarios_final_decision_labels: scenariosFinalDecisionLabels,
-        checking_alignment_list: checkingAlignmentList,
-        final_values: finalValues,
-        moral_values_reorder_list: moralValuesReorderListForMetrics,
-        scenario1_moral_value_reordered: scenario1MoralValueReordered,
-        scenario2_moral_value_reordered: scenario2MoralValueReordered,
-        scenario3_moral_value_reordered: scenario3MoralValueReordered,
-        scenario3_infeasible_options: scenario3InfeasibleOptions
+        debug_tracking: { rows: debugRows }
       });
 
       sessionStorage.setItem('metricsCalculated', 'true');

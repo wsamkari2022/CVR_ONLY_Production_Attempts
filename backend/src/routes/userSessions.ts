@@ -1,52 +1,61 @@
-import { Router, Request, Response } from 'express';
-import UserSession from '../models/UserSession';
+import { Router, Request, Response } from "express";
+import { UserSession } from "../models/UserSession";
 
 const router = Router();
 
-router.post('/', async (req: Request, res: Response) => {
+/**
+ * POST /api/user-sessions
+ * Body: { session_id, demographics, consent_agreed, consent_timestamp }
+ */
+router.post("/", async (req: Request, res: Response) => {
   try {
-    const userSession = new UserSession(req.body);
-    const savedSession = await userSession.save();
-    res.status(201).json({ success: true, data: savedSession });
-  } catch (error: any) {
-    console.error('Error creating user session:', error);
-    res.status(500).json({ success: false, message: 'Failed to create user session', error: error.message });
+    const { session_id, demographics, consent_agreed, consent_timestamp } = req.body || {};
+
+    if (!session_id || !demographics) {
+      return res.status(400).json({ ok: false, error: "session_id and demographics are required" });
+    }
+
+    const ageNum = Number(demographics?.age);
+    const ExperimentCondition = "2"; // Fixed string value for ExperimentCondition
+
+    const doc = await UserSession.create({
+      session_id,
+      ExperimentCondition, // Add the fixed string value here
+      demographics,
+      age: Number.isNaN(ageNum) ? undefined : ageNum,
+      gender: demographics?.gender,
+      ai_experience: demographics?.aiExperience,
+      moral_reasoning_experience: demographics?.moralReasoningExperience,
+      consent_agreed: !!consent_agreed,
+      consent_timestamp: consent_timestamp || null
+    });
+
+    return res.status(201).json({ ok: true, id: doc._id });
+  } catch (err: any) {
+    // duplicate session_id? (unique index) -> error shows here
+    console.error("POST /api/user-sessions error:", err.message);
+    return res.status(500).json({ ok: false, error: err.message });
   }
 });
 
-router.put('/:session_id', async (req: Request, res: Response) => {
+// NEW: PATCH /api/user-sessions/:sessionId  (sessionId is the string session_id)
+router.patch("/:sessionId", async (req: Request, res: Response) => {
   try {
-    const { session_id } = req.params;
-    const updatedSession = await UserSession.findOneAndUpdate(
-      { session_id },
-      { ...req.body, updatedAt: new Date() },
+    const sessionId = req.params.sessionId;
+    if (!sessionId) {
+      return res.status(400).json({ ok: false, error: "Missing sessionId param" });
+    }
+    const doc = await UserSession.findOneAndUpdate(
+      { session_id: sessionId },
+      { $set: req.body },
       { new: true }
     );
-
-    if (!updatedSession) {
-      return res.status(404).json({ success: false, message: 'Session not found' });
+    if (!doc) {
+      return res.status(404).json({ ok: false, error: "Session not found" });
     }
-
-    res.json({ success: true, data: updatedSession });
-  } catch (error: any) {
-    console.error('Error updating user session:', error);
-    res.status(500).json({ success: false, message: 'Failed to update user session', error: error.message });
-  }
-});
-
-router.get('/:session_id', async (req: Request, res: Response) => {
-  try {
-    const { session_id } = req.params;
-    const session = await UserSession.findOne({ session_id });
-
-    if (!session) {
-      return res.status(404).json({ success: false, message: 'Session not found' });
-    }
-
-    res.json({ success: true, data: session });
-  } catch (error: any) {
-    console.error('Error fetching user session:', error);
-    res.status(500).json({ success: false, message: 'Failed to fetch user session', error: error.message });
+    return res.status(200).json({ ok: true, id: doc._id });
+  } catch (err: any) {
+    return res.status(500).json({ ok: false, error: err.message });
   }
 });
 

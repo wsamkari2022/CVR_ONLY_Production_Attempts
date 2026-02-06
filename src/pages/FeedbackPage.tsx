@@ -110,37 +110,37 @@
  */
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  Star, 
-  MessageSquare, 
-  CheckCircle2, 
-  Download, 
-  BarChart2, 
-  FileText, 
-  ArrowRight, 
-  Eye, 
-  RefreshCcw, 
-  TrendingUp, 
-  BarChart3, 
-  Lightbulb, 
-  Info, 
-  X, 
-  Scale, 
-  Brain, 
-  Flame, 
-  AlertTriangle, 
-  Target, 
+import {
+  Star,
+  MessageSquare,
+  CheckCircle2,
+  Download,
+  BarChart2,
+  FileText,
+  ArrowRight,
+  Eye,
+  RefreshCcw,
+  TrendingUp,
+  BarChart3,
+  Lightbulb,
+  Info,
+  X,
+  Scale,
+  Brain,
+  Flame,
+  AlertTriangle,
+  Target,
   XCircle
 } from 'lucide-react';
-import { 
-  Chart as ChartJS, 
-  CategoryScale, 
-  LinearScale, 
-  BarElement, 
-  Title, 
-  Tooltip, 
-  Legend, 
-  PointElement, 
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+  PointElement,
   LineElement
 } from 'chart.js';
 import { Bar, Line } from 'react-chartjs-2';
@@ -150,14 +150,14 @@ import { TrackingManager } from '../utils/trackingUtils';
 import { MongoService } from '../lib/mongoService';
 import ValueStabilityTable from '../components/ValueStabilityTable';
 
-ChartJS.register( 
-  CategoryScale, 
-  LinearScale, 
-  BarElement, 
-  PointElement, 
-  LineElement, 
-  Title, 
-  Tooltip, 
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
   Legend
 );
 
@@ -285,8 +285,8 @@ const FeedbackPage: React.FC = () => {
   const [overallStabilityScore, setOverallStabilityScore] = useState<number>(0);
   const [analysisError, setAnalysisError] = useState(false);
   const [valueTrends, setValueTrends] = useState<ValueTrend>(initializeValueTrends());
-  const [explicitValueFrequencies, setExplicitValueFrequencies] = useState<Array<{value: string, count: number, percentage: number}>>([]);
-  const [implicitValueFrequencies, setImplicitValueFrequencies] = useState<Array<{value: string, count: number, percentage: number}>>([]);
+  const [explicitValueFrequencies, setExplicitValueFrequencies] = useState<Array<{ value: string, count: number, percentage: number }>>([]);
+  const [implicitValueFrequencies, setImplicitValueFrequencies] = useState<Array<{ value: string, count: number, percentage: number }>>([]);
 
   useEffect(() => {
     calculateMetrics();
@@ -445,7 +445,7 @@ const FeedbackPage: React.FC = () => {
         }
       });
 
-      const valueOrderTrajectories: Array<{scenarioId: number, values: string[], preferenceType: string}> = [];
+      const valueOrderTrajectories: Array<{ scenarioId: number, values: string[], preferenceType: string }> = [];
 
       apaEvents.forEach(event => {
         if (event.valuesAfter && event.scenarioId !== undefined) {
@@ -710,69 +710,102 @@ const FeedbackPage: React.FC = () => {
 
     const sessionId = MongoService.getSessionId();
 
-    const scenariosFinalDecisionLabels = JSON.parse(localStorage.getItem('ScenariosFinalDecisionLabels') || '[]');
-    const checkingAlignmentList = JSON.parse(localStorage.getItem('CheckingAlignmentList') || '[]');
+    const scenariosFinalDecisionLabels =
+      JSON.parse(localStorage.getItem('ScenariosFinalDecisionLabels') || '[]');
+    const checkingAlignmentList =
+      JSON.parse(localStorage.getItem('CheckingAlignmentList') || '[]');
 
-    await MongoService.insertSessionFeedback({
-      session_id: sessionId,
-      cvr_initial_reconsideration: feedback.cvrInitialReconsideration,
-      cvr_final_reconsideration: feedback.cvrFinalReconsideration,
-      cvr_purpose_clarity: feedback.cvrPurposeClarity,
-      cvr_confidence_change: feedback.cvrConfidenceChange,
-      cvr_helpfulness: feedback.cvrHelpfulness,
-      cvr_clarity: feedback.cvrClarity,
-      cvr_comfort_level: feedback.cvrComfortLevel,
-      cvr_perceived_value: feedback.cvrPerceivedValue,
-      cvr_overall_impact: feedback.cvrOverallImpact,
-      cvr_comments: feedback.cvrComments,
-      apa_purpose_clarity: feedback.apaPurposeClarity,
-      apa_ease_of_use: feedback.apaEaseOfUse,
-      apa_control_understanding: feedback.apaControlUnderstanding,
-      apa_decision_reflection: feedback.apaDecisionReflection,
-      apa_scenario_alignment: feedback.apaScenarioAlignment,
-      apa_comparison_usefulness: feedback.apaComparisonUsefulness,
-      apa_perspective_value: feedback.apaPerspectiveValue,
-      apa_confidence_after_reordering: feedback.apaConfidenceAfterReordering,
-      apa_perceived_value: feedback.apaPerceivedValue,
-      apa_tradeoff_challenge: feedback.apaTradeoffChallenge,
-      apa_reflection_depth: feedback.apaReflectionDepth,
-      apa_comments: feedback.apaComments,
-      viz_clarity: feedback.vizClarity,
-      viz_helpfulness: feedback.vizHelpfulness,
-      viz_usefulness: feedback.vizUsefulness,
-      viz_tradeoff_evaluation: feedback.vizTradeoffEvaluation,
-      viz_tradeoff_justification: feedback.vizTradeoffJustification,
-      viz_expert_usefulness: feedback.vizExpertUsefulness,
-      viz_expert_confidence_impact: feedback.vizExpertConfidenceImpact,
-      viz_comments: feedback.vizComments,
-      overall_scenario_alignment: feedback.overallScenarioAlignment,
-      overall_decision_satisfaction: feedback.overallDecisionSatisfaction,
-      overall_process_satisfaction: feedback.overallProcessSatisfaction,
-      overall_confidence_consistency: feedback.overallConfidenceConsistency,
-      overall_learning_insight: feedback.overallLearningInsight,
-      overall_comments: feedback.overallComments,
-      value_consistency_index: metrics.valueConsistencyIndex,
-      performance_composite: metrics.performanceComposite,
-      balance_index: metrics.balanceIndex,
-      cvr_arrivals: metrics.cvrArrivals,
-      cvr_yes_count: metrics.cvrYesCount,
-      cvr_no_count: metrics.cvrNoCount,
-      apa_reorderings: metrics.apaReorderings,
-      total_switches: metrics.switchCountTotal,
-      avg_decision_time: metrics.avgDecisionTime,
-      scenarios_final_decision_labels: scenariosFinalDecisionLabels,
-      checking_alignment_list: checkingAlignmentList
-    });
+    try {
+      await MongoService.insertSessionFeedback({
+        session_id: sessionId,
 
-    await MongoService.updateUserSession(sessionId, {
-      is_completed: true,
-      completed_at: new Date().toISOString()
-    });
+        cvr: {
+          initialReconsideration: feedback.cvrInitialReconsideration,
+          finalReconsideration: feedback.cvrFinalReconsideration,
+          purposeClarity: feedback.cvrPurposeClarity,
+          confidenceChange: feedback.cvrConfidenceChange,
+          helpfulness: feedback.cvrHelpfulness,
+          clarity: feedback.cvrClarity,
+          comfortLevel: feedback.cvrComfortLevel,
+          perceivedValue: feedback.cvrPerceivedValue,
+          overallImpact: feedback.cvrOverallImpact,
+          comments: feedback.cvrComments,
+        },
 
-    await MongoService.syncFallbackData();
+        // apa: {
+        //   purposeClarity: feedback.apaPurposeClarity,
+        //   easeOfUse: feedback.apaEaseOfUse,
+        //   controlUnderstanding: feedback.apaControlUnderstanding,
+        //   decisionReflection: feedback.apaDecisionReflection,
+        //   scenarioAlignment: feedback.apaScenarioAlignment,
+        //   comparisonUsefulness: feedback.apaComparisonUsefulness,
+        //   perspectiveValue: feedback.apaPerspectiveValue,
+        //   confidenceAfterReordering: feedback.apaConfidenceAfterReordering,
+        //   perceivedValue: feedback.apaPerceivedValue,
+        //   tradeoffChallenge: feedback.apaTradeoffChallenge,
+        //   reflectionDepth: feedback.apaReflectionDepth,
+        //   comments: feedback.apaComments,
+        // },
 
-    setIsSubmitted(true);
-    setShowExport(true);
+        visualization: {
+          usedTradeoffComparison: feedback.usedTradeoffComparison,
+          clarity: feedback.vizClarity,
+          usefulness: feedback.vizUsefulness,
+          tradeoffEvaluation: feedback.vizTradeoffEvaluation,
+          tradeoffJustification: feedback.vizTradeoffJustification,
+          expertUsefulness: feedback.vizExpertUsefulness,
+          helpfulness: feedback.vizHelpfulness,
+          expertConfidenceImpact: feedback.vizExpertConfidenceImpact,
+          comments: feedback.vizComments,
+        },
+
+        overall: {
+          scenarioAlignment: feedback.overallScenarioAlignment,
+          decisionSatisfaction: feedback.overallDecisionSatisfaction,
+          processSatisfaction: feedback.overallProcessSatisfaction,
+          confidenceConsistency: feedback.overallConfidenceConsistency,
+          learningInsight: feedback.overallLearningInsight,
+          comments: feedback.overallComments,
+        },
+
+        metricsSnapshot: {
+          valueConsistencyIndex: metrics.valueConsistencyIndex,
+          performanceComposite: metrics.performanceComposite,
+          balanceIndex: metrics.balanceIndex,
+          cvrArrivals: metrics.cvrArrivals,
+          cvrYesCount: metrics.cvrYesCount,
+          cvrNoCount: metrics.cvrNoCount,
+          //apaReorderings: metrics.apaReorderings,
+          totalSwitches: metrics.switchCountTotal,
+          avgDecisionTime: metrics.avgDecisionTime,
+          scenariosFinalDecisionLabels,
+          checkingAlignmentList,
+        },
+      });
+
+      // ✅ Flip the UI state immediately after the main DB write succeeds
+      setIsSubmitted(true);
+      setShowExport(true);
+
+      // 2) Optional follow-ups (don’t block the UI if they fail)
+      try {
+        await MongoService.updateUserSession?.(sessionId, {
+          is_completed: true,
+          completed_at: new Date().toISOString(),
+        });
+      } catch (e) {
+        console.debug("updateUserSession failed (non-blocking):", e);
+      }
+
+      try {
+        await MongoService.syncFallbackData?.();
+      } catch (e) {
+        console.debug("syncFallbackData failed (non-blocking):", e);
+      }
+    } catch (err) {
+      console.error("Submit feedback failed:", err);
+      alert("Sorry—saving feedback failed. Please try again.");
+    }
   };
 
   const handleExportData = (format: 'json' | 'csv') => {
@@ -902,22 +935,20 @@ const FeedbackPage: React.FC = () => {
                     <button
                       onClick={() => setFeedback(prev => ({ ...prev, cvrInitialReconsideration: true }))}
                       disabled={isSubmitted}
-                      className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all ${
-                        feedback.cvrInitialReconsideration === true
-                          ? 'bg-blue-600 text-white shadow-lg'
-                          : 'bg-white text-gray-700 border-2 border-gray-300 hover:border-blue-400'
-                      } disabled:opacity-50 disabled:cursor-not-allowed`}
+                      className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all ${feedback.cvrInitialReconsideration === true
+                        ? 'bg-blue-600 text-white shadow-lg'
+                        : 'bg-white text-gray-700 border-2 border-gray-300 hover:border-blue-400'
+                        } disabled:opacity-50 disabled:cursor-not-allowed`}
                     >
                       Yes
                     </button>
                     <button
                       onClick={() => setFeedback(prev => ({ ...prev, cvrInitialReconsideration: false }))}
                       disabled={isSubmitted}
-                      className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all ${
-                        feedback.cvrInitialReconsideration === false
-                          ? 'bg-blue-600 text-white shadow-lg'
-                          : 'bg-white text-gray-700 border-2 border-gray-300 hover:border-blue-400'
-                      } disabled:opacity-50 disabled:cursor-not-allowed`}
+                      className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all ${feedback.cvrInitialReconsideration === false
+                        ? 'bg-blue-600 text-white shadow-lg'
+                        : 'bg-white text-gray-700 border-2 border-gray-300 hover:border-blue-400'
+                        } disabled:opacity-50 disabled:cursor-not-allowed`}
                     >
                       No
                     </button>
@@ -932,22 +963,20 @@ const FeedbackPage: React.FC = () => {
                     <button
                       onClick={() => setFeedback(prev => ({ ...prev, cvrFinalReconsideration: true }))}
                       disabled={isSubmitted}
-                      className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all ${
-                        feedback.cvrFinalReconsideration === true
-                          ? 'bg-blue-600 text-white shadow-lg'
-                          : 'bg-white text-gray-700 border-2 border-gray-300 hover:border-blue-400'
-                      } disabled:opacity-50 disabled:cursor-not-allowed`}
+                      className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all ${feedback.cvrFinalReconsideration === true
+                        ? 'bg-blue-600 text-white shadow-lg'
+                        : 'bg-white text-gray-700 border-2 border-gray-300 hover:border-blue-400'
+                        } disabled:opacity-50 disabled:cursor-not-allowed`}
                     >
                       Yes
                     </button>
                     <button
                       onClick={() => setFeedback(prev => ({ ...prev, cvrFinalReconsideration: false }))}
                       disabled={isSubmitted}
-                      className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all ${
-                        feedback.cvrFinalReconsideration === false
-                          ? 'bg-blue-600 text-white shadow-lg'
-                          : 'bg-white text-gray-700 border-2 border-gray-300 hover:border-blue-400'
-                      } disabled:opacity-50 disabled:cursor-not-allowed`}
+                      className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all ${feedback.cvrFinalReconsideration === false
+                        ? 'bg-blue-600 text-white shadow-lg'
+                        : 'bg-white text-gray-700 border-2 border-gray-300 hover:border-blue-400'
+                        } disabled:opacity-50 disabled:cursor-not-allowed`}
                     >
                       No
                     </button>
@@ -1177,373 +1206,369 @@ const FeedbackPage: React.FC = () => {
           </div>
         </div>
 
-        {metrics && metrics.apaReorderings > 0 && (
-        <div className="bg-gradient-to-br from-green-50 via-emerald-100 to-teal-50 rounded-lg shadow-lg border-2 border-green-300 p-6 mb-8">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-xl font-bold text-green-900 flex items-center">
-              <RefreshCcw className="h-6 w-6 mr-2 text-green-700" />
-              Adaptive Preference Analysis (APA)
-            </h3>
-            <div className="flex items-center gap-2 bg-green-200 px-3 py-1.5 rounded-full shadow-sm">
-              <span className="text-xs font-bold text-green-900">Total APA Reorderings:</span>
-              <span className="text-sm font-bold text-green-900">{metrics.apaReorderings}</span>
-            </div>
-          </div>
-
-          <p className="text-sm text-green-800 font-medium mb-6 leading-relaxed bg-white/60 p-3 rounded-lg">
-            The APA (Adaptive Preference Alignment) feature allowed you to compare your chosen options with CVR scenarios and reprioritize your values based on new insights. The goal is to help you understand options from different perspectives and align future choices with your reordered values.
-          </p>
-
-          <div className="space-y-6">
-            <div className="bg-gray-50 rounded-lg p-4">
-              <h4 className="text-sm font-semibold text-gray-800 mb-4">Understanding and Usability</h4>
-
-              <div className="space-y-6">
-                <div className="bg-white rounded-lg p-4 shadow-sm">
-                  <label className="block text-sm font-medium text-gray-700 mb-3">
-                    Purpose Clarity: How clear was the purpose of the APA feature in helping you balance Simulation Metrics and Moral Values when making decisions?
-                  </label>
-                  <div className="flex items-center space-x-4">
-                    <span className="text-xs text-gray-500 w-4">1</span>
-                    <input
-                      type="range"
-                      min="1"
-                      max="7"
-                      value={feedback.apaPurposeClarity}
-                      onChange={(e) => handleSliderChange('apaPurposeClarity', parseInt(e.target.value))}
-                      className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
-                      disabled={isSubmitted}
-                    />
-                    <span className="text-xs text-gray-500 w-4">7</span>
-                    <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                      <span className="text-base font-bold text-blue-600">{feedback.apaPurposeClarity}</span>
-                    </div>
-                  </div>
-                  <div className="flex justify-between text-xs text-gray-400 mt-1 px-8">
-                    <span>Very unclear</span>
-                    <span>Very clear</span>
-                  </div>
-                </div>
-
-                <div className="bg-white rounded-lg p-4 shadow-sm">
-                  <label className="block text-sm font-medium text-gray-700 mb-3">
-                    Ease of Use: How easy was it to rank or re-order your priorities during the APA process?
-                  </label>
-                  <div className="flex items-center space-x-4">
-                    <span className="text-xs text-gray-500 w-4">1</span>
-                    <input
-                      type="range"
-                      min="1"
-                      max="7"
-                      value={feedback.apaEaseOfUse}
-                      onChange={(e) => handleSliderChange('apaEaseOfUse', parseInt(e.target.value))}
-                      className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
-                      disabled={isSubmitted}
-                    />
-                    <span className="text-xs text-gray-500 w-4">7</span>
-                    <div className="w-10 h-10 bg-cyan-100 rounded-full flex items-center justify-center">
-                      <span className="text-base font-bold text-cyan-600">{feedback.apaEaseOfUse}</span>
-                    </div>
-                  </div>
-                  <div className="flex justify-between text-xs text-gray-400 mt-1 px-8">
-                    <span>Very difficult</span>
-                    <span>Very easy</span>
-                  </div>
-                </div>
-
-                <div className="bg-white rounded-lg p-4 shadow-sm">
-                  <label className="block text-sm font-medium text-gray-700 mb-3">
-                    Control and Understanding: Did you feel that the APA interface gave you enough control to shape your decisions according to your ranked preferences?
-                  </label>
-                  <div className="flex items-center space-x-4">
-                    <span className="text-xs text-gray-500 w-4">1</span>
-                    <input
-                      type="range"
-                      min="1"
-                      max="7"
-                      value={feedback.apaControlUnderstanding}
-                      onChange={(e) => handleSliderChange('apaControlUnderstanding', parseInt(e.target.value))}
-                      className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
-                      disabled={isSubmitted}
-                    />
-                    <span className="text-xs text-gray-500 w-4">7</span>
-                    <div className="w-10 h-10 bg-teal-100 rounded-full flex items-center justify-center">
-                      <span className="text-base font-bold text-teal-600">{feedback.apaControlUnderstanding}</span>
-                    </div>
-                  </div>
-                  <div className="flex justify-between text-xs text-gray-400 mt-1 px-8">
-                    <span>No control</span>
-                    <span>Full control</span>
-                  </div>
-                </div>
+        {/* {metrics && metrics.apaReorderings > 0 && (
+          <div className="bg-gradient-to-br from-green-50 via-emerald-100 to-teal-50 rounded-lg shadow-lg border-2 border-green-300 p-6 mb-8">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-bold text-green-900 flex items-center">
+                <RefreshCcw className="h-6 w-6 mr-2 text-green-700" />
+                Adaptive Preference Analysis (APA)
+              </h3>
+              <div className="flex items-center gap-2 bg-green-200 px-3 py-1.5 rounded-full shadow-sm">
+                <span className="text-xs font-bold text-green-900">Total APA Reorderings:</span>
+                <span className="text-sm font-bold text-green-900">{metrics.apaReorderings}</span>
               </div>
             </div>
 
-            <div className="bg-gray-50 rounded-lg p-4">
-              <h4 className="text-sm font-semibold text-gray-800 mb-4">Perceived Impact and Alignment</h4>
+            <p className="text-sm text-green-800 font-medium mb-6 leading-relaxed bg-white/60 p-3 rounded-lg">
+              The APA (Adaptive Preference Alignment) feature allowed you to compare your chosen options with CVR scenarios and reprioritize your values based on new insights. The goal is to help you understand options from different perspectives and align future choices with your reordered values.
+            </p>
 
-              <div className="space-y-6">
-                <div className="bg-white rounded-lg p-4 shadow-sm">
-                  <label className="block text-sm font-medium text-gray-700 mb-3">
-                    Decision Reflection: Did the APA process cause you to rethink what mattered most in your decision-making (for example, Safety vs. Efficiency)?
-                  </label>
-                  <div className="flex gap-4">
-                    <button
-                      onClick={() => setFeedback(prev => ({ ...prev, apaDecisionReflection: true }))}
-                      disabled={isSubmitted}
-                      className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all ${
-                        feedback.apaDecisionReflection === true
-                          ? 'bg-green-600 text-white shadow-lg'
-                          : 'bg-white text-gray-700 border-2 border-gray-300 hover:border-green-400'
-                      } disabled:opacity-50 disabled:cursor-not-allowed`}
-                    >
-                      Yes
-                    </button>
-                    <button
-                      onClick={() => setFeedback(prev => ({ ...prev, apaDecisionReflection: false }))}
-                      disabled={isSubmitted}
-                      className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all ${
-                        feedback.apaDecisionReflection === false
-                          ? 'bg-green-600 text-white shadow-lg'
-                          : 'bg-white text-gray-700 border-2 border-gray-300 hover:border-green-400'
-                      } disabled:opacity-50 disabled:cursor-not-allowed`}
-                    >
-                      No
-                    </button>
-                  </div>
-                </div>
+            <div className="space-y-6">
+              <div className="bg-gray-50 rounded-lg p-4">
+                <h4 className="text-sm font-semibold text-gray-800 mb-4">Understanding and Usability</h4>
 
-                <div className="bg-white rounded-lg p-4 shadow-sm">
-                  <label className="block text-sm font-medium text-gray-700 mb-3">
-                    Scenario Alignment: Did the APA system help you see more aligned and relevant initial options when you arrived at the next scenarios?
-                  </label>
-                  <div className="flex gap-4">
-                    <button
-                      onClick={() => setFeedback(prev => ({ ...prev, apaScenarioAlignment: true }))}
-                      disabled={isSubmitted}
-                      className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all ${
-                        feedback.apaScenarioAlignment === true
-                          ? 'bg-green-600 text-white shadow-lg'
-                          : 'bg-white text-gray-700 border-2 border-gray-300 hover:border-green-400'
-                      } disabled:opacity-50 disabled:cursor-not-allowed`}
-                    >
-                      Yes
-                    </button>
-                    <button
-                      onClick={() => setFeedback(prev => ({ ...prev, apaScenarioAlignment: false }))}
-                      disabled={isSubmitted}
-                      className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all ${
-                        feedback.apaScenarioAlignment === false
-                          ? 'bg-green-600 text-white shadow-lg'
-                          : 'bg-white text-gray-700 border-2 border-gray-300 hover:border-green-400'
-                      } disabled:opacity-50 disabled:cursor-not-allowed`}
-                    >
-                      No
-                    </button>
-                  </div>
-                </div>
-
-                <div className="bg-white rounded-lg p-4 shadow-sm">
-                  <label className="block text-sm font-medium text-gray-700 mb-3">
-                    APA Comparison Table Usefulness: How useful was comparing your simulation choices with CVR scenarios (APA Comparison Table)?
-                  </label>
-                  <div className="flex items-center space-x-4">
-                    <span className="text-xs text-gray-500 w-4">1</span>
-                    <input
-                      type="range"
-                      min="1"
-                      max="7"
-                      value={feedback.apaComparisonUsefulness}
-                      onChange={(e) => handleSliderChange('apaComparisonUsefulness', parseInt(e.target.value))}
-                      className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
-                      disabled={isSubmitted}
-                    />
-                    <span className="text-xs text-gray-500 w-4">7</span>
-                    <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                      <span className="text-base font-bold text-green-600">{feedback.apaComparisonUsefulness}</span>
-                    </div>
-                  </div>
-                  <div className="flex justify-between text-xs text-gray-400 mt-1 px-8">
-                    <span>Not useful</span>
-                    <span>Very useful</span>
-                  </div>
-                </div>
-
-                <div className="bg-white rounded-lg p-4 shadow-sm">
-                  <label className="block text-sm font-medium text-gray-700 mb-3">
-                    Perspective Value: How valuable was understanding options from different perspectives (value-based perspectives) through APA?
-                  </label>
-                  <div className="flex items-center space-x-4">
-                    <span className="text-xs text-gray-500 w-4">1</span>
-                    <input
-                      type="range"
-                      min="1"
-                      max="7"
-                      value={feedback.apaPerspectiveValue}
-                      onChange={(e) => handleSliderChange('apaPerspectiveValue', parseInt(e.target.value))}
-                      className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
-                      disabled={isSubmitted}
-                    />
-                    <span className="text-xs text-gray-500 w-4">7</span>
-                    <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
-                      <span className="text-base font-bold text-emerald-600">{feedback.apaPerspectiveValue}</span>
-                    </div>
-                  </div>
-                  <div className="flex justify-between text-xs text-gray-400 mt-1 px-8">
-                    <span>Not valuable</span>
-                    <span>Extremely valuable</span>
-                  </div>
-                </div>
-
-                <div className="bg-white rounded-lg p-4 shadow-sm">
-                  <label className="block text-sm font-medium text-gray-700 mb-3">
-                    Confidence After Reordering: How confident were you in your final decisions after adjusting your moral or simulation value rankings?
-                  </label>
-                  <div className="flex items-center space-x-4">
-                    <span className="text-xs text-gray-500 w-4">1</span>
-                    <input
-                      type="range"
-                      min="1"
-                      max="7"
-                      value={feedback.apaConfidenceAfterReordering}
-                      onChange={(e) => handleSliderChange('apaConfidenceAfterReordering', parseInt(e.target.value))}
-                      className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
-                      disabled={isSubmitted}
-                    />
-                    <span className="text-xs text-gray-500 w-4">7</span>
-                    <div className="w-10 h-10 bg-teal-100 rounded-full flex items-center justify-center">
-                      <span className="text-base font-bold text-teal-600">{feedback.apaConfidenceAfterReordering}</span>
-                    </div>
-                  </div>
-                  <div className="flex justify-between text-xs text-gray-400 mt-1 px-8">
-                    <span>Not confident</span>
-                    <span>Very confident</span>
-                  </div>
-                </div>
-
-                <div className="bg-white rounded-lg p-4 shadow-sm">
-                  <label className="block text-sm font-medium text-gray-700 mb-3">
-                    Perceived Value: How valuable was the APA feature overall in helping you make decisions that reflected your values and priorities?
-                  </label>
-                  <div className="flex items-center space-x-4">
-                    <span className="text-xs text-gray-500 w-4">1</span>
-                    <input
-                      type="range"
-                      min="1"
-                      max="7"
-                      value={feedback.apaPerceivedValue}
-                      onChange={(e) => handleSliderChange('apaPerceivedValue', parseInt(e.target.value))}
-                      className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
-                      disabled={isSubmitted}
-                    />
-                    <span className="text-xs text-gray-500 w-4">7</span>
-                    <div className="w-10 h-10 bg-lime-100 rounded-full flex items-center justify-center">
-                      <span className="text-base font-bold text-lime-600">{feedback.apaPerceivedValue}</span>
-                    </div>
-                  </div>
-                  <div className="flex justify-between text-xs text-gray-400 mt-1 px-8">
-                    <span>Not valuable</span>
-                    <span>Extremely valuable</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-gray-50 rounded-lg p-4">
-              <h4 className="text-sm font-semibold text-gray-800 mb-4">Cognitive Effort and Challenge</h4>
-
-              <div className="space-y-6">
-                <div className="bg-white rounded-lg p-4 shadow-sm">
-                  <label className="block text-sm font-medium text-gray-700 mb-3">
-                    Trade-off Challenge: How challenging was it to decide which moral values or simulation metrics should take priority when ranking them?
-                  </label>
-                  <div className="flex items-center space-x-4">
-                    <span className="text-xs text-gray-500 w-4">1</span>
-                    <input
-                      type="range"
-                      min="1"
-                      max="7"
-                      value={feedback.apaTradeoffChallenge}
-                      onChange={(e) => handleSliderChange('apaTradeoffChallenge', parseInt(e.target.value))}
-                      className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
-                      disabled={isSubmitted}
-                    />
-                    <span className="text-xs text-gray-500 w-4">7</span>
-                    <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center">
-                      <span className="text-base font-bold text-amber-600">{feedback.apaTradeoffChallenge}</span>
-                    </div>
-                  </div>
-                  <div className="flex justify-between text-xs text-gray-400 mt-1 px-8">
-                    <span>Not challenging</span>
-                    <span>Very challenging</span>
-                  </div>
-                </div>
-
-                <div className="bg-white rounded-lg p-4 shadow-sm">
-                  <label className="block text-sm font-medium text-gray-700 mb-3">
-                    Reflection Depth: To what extent did APA make you reflect on the trade-offs between different moral or operational values?
-                  </label>
-                  <div className="flex items-center space-x-4">
-                    <span className="text-xs text-gray-500 w-4">1</span>
-                    <input
-                      type="range"
-                      min="1"
-                      max="7"
-                      value={feedback.apaReflectionDepth}
-                      onChange={(e) => handleSliderChange('apaReflectionDepth', parseInt(e.target.value))}
-                      className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
-                      disabled={isSubmitted}
-                    />
-                    <span className="text-xs text-gray-500 w-4">7</span>
-                    <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
-                      <span className="text-base font-bold text-orange-600">{feedback.apaReflectionDepth}</span>
-                    </div>
-                  </div>
-                  <div className="flex justify-between text-xs text-gray-400 mt-1 px-8">
-                    <span>Not at all</span>
-                    <span>A great deal</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
-                <MessageSquare className="h-4 w-4 mr-2 text-gray-500" />
-                Tell us about your APA experience (optional)
-                <button
-                  onMouseEnter={() => setShowApaTooltip(true)}
-                  onMouseLeave={() => setShowApaTooltip(false)}
-                  onClick={() => setShowApaTooltip(!showApaTooltip)}
-                  className="ml-2 text-green-500 hover:text-green-700 relative"
-                >
-                  <Info className="h-4 w-4" />
-                  {showApaTooltip && (
-                    <div className="absolute left-0 top-6 z-10 w-80 bg-gray-900 text-white text-xs rounded-lg p-3 shadow-xl">
-                      <div className="space-y-2">
-                        <p>Which part of APA helped you understand your priorities better?</p>
-                        <p>Did ranking your preferences change how you approached the next scenario?</p>
-                        <p>What about APA did you find most useful or challenging?</p>
-                        <p>Did ranking your preferences change your next decisions?</p>
-                        <p>Where did APA feel most valuable?</p>
-                        <p>How could APA be improved?</p>
+                <div className="space-y-6">
+                  <div className="bg-white rounded-lg p-4 shadow-sm">
+                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                      Purpose Clarity: How clear was the purpose of the APA feature in helping you balance Simulation Metrics and Moral Values when making decisions?
+                    </label>
+                    <div className="flex items-center space-x-4">
+                      <span className="text-xs text-gray-500 w-4">1</span>
+                      <input
+                        type="range"
+                        min="1"
+                        max="7"
+                        value={feedback.apaPurposeClarity}
+                        onChange={(e) => handleSliderChange('apaPurposeClarity', parseInt(e.target.value))}
+                        className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+                        disabled={isSubmitted}
+                      />
+                      <span className="text-xs text-gray-500 w-4">7</span>
+                      <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                        <span className="text-base font-bold text-blue-600">{feedback.apaPurposeClarity}</span>
                       </div>
                     </div>
-                  )}
-                </button>
-              </label>
-              <textarea
-                value={feedback.apaComments}
-                onChange={(e) => setFeedback(prev => ({ ...prev, apaComments: e.target.value }))}
-                rows={4}
-                disabled={isSubmitted}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
-                placeholder="What did you find most useful or challenging about APA? Did ranking your preferences change your next decisions? Where did APA feel most valuable? How could APA be improved?"
-              />
+                    <div className="flex justify-between text-xs text-gray-400 mt-1 px-8">
+                      <span>Very unclear</span>
+                      <span>Very clear</span>
+                    </div>
+                  </div>
+
+                  <div className="bg-white rounded-lg p-4 shadow-sm">
+                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                      Ease of Use: How easy was it to rank or re-order your priorities during the APA process?
+                    </label>
+                    <div className="flex items-center space-x-4">
+                      <span className="text-xs text-gray-500 w-4">1</span>
+                      <input
+                        type="range"
+                        min="1"
+                        max="7"
+                        value={feedback.apaEaseOfUse}
+                        onChange={(e) => handleSliderChange('apaEaseOfUse', parseInt(e.target.value))}
+                        className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+                        disabled={isSubmitted}
+                      />
+                      <span className="text-xs text-gray-500 w-4">7</span>
+                      <div className="w-10 h-10 bg-cyan-100 rounded-full flex items-center justify-center">
+                        <span className="text-base font-bold text-cyan-600">{feedback.apaEaseOfUse}</span>
+                      </div>
+                    </div>
+                    <div className="flex justify-between text-xs text-gray-400 mt-1 px-8">
+                      <span>Very difficult</span>
+                      <span>Very easy</span>
+                    </div>
+                  </div>
+
+                  <div className="bg-white rounded-lg p-4 shadow-sm">
+                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                      Control and Understanding: Did you feel that the APA interface gave you enough control to shape your decisions according to your ranked preferences?
+                    </label>
+                    <div className="flex items-center space-x-4">
+                      <span className="text-xs text-gray-500 w-4">1</span>
+                      <input
+                        type="range"
+                        min="1"
+                        max="7"
+                        value={feedback.apaControlUnderstanding}
+                        onChange={(e) => handleSliderChange('apaControlUnderstanding', parseInt(e.target.value))}
+                        className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+                        disabled={isSubmitted}
+                      />
+                      <span className="text-xs text-gray-500 w-4">7</span>
+                      <div className="w-10 h-10 bg-teal-100 rounded-full flex items-center justify-center">
+                        <span className="text-base font-bold text-teal-600">{feedback.apaControlUnderstanding}</span>
+                      </div>
+                    </div>
+                    <div className="flex justify-between text-xs text-gray-400 mt-1 px-8">
+                      <span>No control</span>
+                      <span>Full control</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-gray-50 rounded-lg p-4">
+                <h4 className="text-sm font-semibold text-gray-800 mb-4">Perceived Impact and Alignment</h4>
+
+                <div className="space-y-6">
+                  <div className="bg-white rounded-lg p-4 shadow-sm">
+                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                      Decision Reflection: Did the APA process cause you to rethink what mattered most in your decision-making (for example, Safety vs. Efficiency)?
+                    </label>
+                    <div className="flex gap-4">
+                      <button
+                        onClick={() => setFeedback(prev => ({ ...prev, apaDecisionReflection: true }))}
+                        disabled={isSubmitted}
+                        className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all ${feedback.apaDecisionReflection === true
+                          ? 'bg-green-600 text-white shadow-lg'
+                          : 'bg-white text-gray-700 border-2 border-gray-300 hover:border-green-400'
+                          } disabled:opacity-50 disabled:cursor-not-allowed`}
+                      >
+                        Yes
+                      </button>
+                      <button
+                        onClick={() => setFeedback(prev => ({ ...prev, apaDecisionReflection: false }))}
+                        disabled={isSubmitted}
+                        className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all ${feedback.apaDecisionReflection === false
+                          ? 'bg-green-600 text-white shadow-lg'
+                          : 'bg-white text-gray-700 border-2 border-gray-300 hover:border-green-400'
+                          } disabled:opacity-50 disabled:cursor-not-allowed`}
+                      >
+                        No
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="bg-white rounded-lg p-4 shadow-sm">
+                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                      Scenario Alignment: Did the APA system help you see more aligned and relevant initial options when you arrived at the next scenarios?
+                    </label>
+                    <div className="flex gap-4">
+                      <button
+                        onClick={() => setFeedback(prev => ({ ...prev, apaScenarioAlignment: true }))}
+                        disabled={isSubmitted}
+                        className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all ${feedback.apaScenarioAlignment === true
+                          ? 'bg-green-600 text-white shadow-lg'
+                          : 'bg-white text-gray-700 border-2 border-gray-300 hover:border-green-400'
+                          } disabled:opacity-50 disabled:cursor-not-allowed`}
+                      >
+                        Yes
+                      </button>
+                      <button
+                        onClick={() => setFeedback(prev => ({ ...prev, apaScenarioAlignment: false }))}
+                        disabled={isSubmitted}
+                        className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all ${feedback.apaScenarioAlignment === false
+                          ? 'bg-green-600 text-white shadow-lg'
+                          : 'bg-white text-gray-700 border-2 border-gray-300 hover:border-green-400'
+                          } disabled:opacity-50 disabled:cursor-not-allowed`}
+                      >
+                        No
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="bg-white rounded-lg p-4 shadow-sm">
+                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                      APA Comparison Table Usefulness: How useful was comparing your simulation choices with CVR scenarios (APA Comparison Table)?
+                    </label>
+                    <div className="flex items-center space-x-4">
+                      <span className="text-xs text-gray-500 w-4">1</span>
+                      <input
+                        type="range"
+                        min="1"
+                        max="7"
+                        value={feedback.apaComparisonUsefulness}
+                        onChange={(e) => handleSliderChange('apaComparisonUsefulness', parseInt(e.target.value))}
+                        className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+                        disabled={isSubmitted}
+                      />
+                      <span className="text-xs text-gray-500 w-4">7</span>
+                      <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                        <span className="text-base font-bold text-green-600">{feedback.apaComparisonUsefulness}</span>
+                      </div>
+                    </div>
+                    <div className="flex justify-between text-xs text-gray-400 mt-1 px-8">
+                      <span>Not useful</span>
+                      <span>Very useful</span>
+                    </div>
+                  </div>
+
+                  <div className="bg-white rounded-lg p-4 shadow-sm">
+                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                      Perspective Value: How valuable was understanding options from different perspectives (value-based perspectives) through APA?
+                    </label>
+                    <div className="flex items-center space-x-4">
+                      <span className="text-xs text-gray-500 w-4">1</span>
+                      <input
+                        type="range"
+                        min="1"
+                        max="7"
+                        value={feedback.apaPerspectiveValue}
+                        onChange={(e) => handleSliderChange('apaPerspectiveValue', parseInt(e.target.value))}
+                        className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+                        disabled={isSubmitted}
+                      />
+                      <span className="text-xs text-gray-500 w-4">7</span>
+                      <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
+                        <span className="text-base font-bold text-emerald-600">{feedback.apaPerspectiveValue}</span>
+                      </div>
+                    </div>
+                    <div className="flex justify-between text-xs text-gray-400 mt-1 px-8">
+                      <span>Not valuable</span>
+                      <span>Extremely valuable</span>
+                    </div>
+                  </div>
+
+                  <div className="bg-white rounded-lg p-4 shadow-sm">
+                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                      Confidence After Reordering: How confident were you in your final decisions after adjusting your moral or simulation value rankings?
+                    </label>
+                    <div className="flex items-center space-x-4">
+                      <span className="text-xs text-gray-500 w-4">1</span>
+                      <input
+                        type="range"
+                        min="1"
+                        max="7"
+                        value={feedback.apaConfidenceAfterReordering}
+                        onChange={(e) => handleSliderChange('apaConfidenceAfterReordering', parseInt(e.target.value))}
+                        className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+                        disabled={isSubmitted}
+                      />
+                      <span className="text-xs text-gray-500 w-4">7</span>
+                      <div className="w-10 h-10 bg-teal-100 rounded-full flex items-center justify-center">
+                        <span className="text-base font-bold text-teal-600">{feedback.apaConfidenceAfterReordering}</span>
+                      </div>
+                    </div>
+                    <div className="flex justify-between text-xs text-gray-400 mt-1 px-8">
+                      <span>Not confident</span>
+                      <span>Very confident</span>
+                    </div>
+                  </div>
+
+                  <div className="bg-white rounded-lg p-4 shadow-sm">
+                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                      Perceived Value: How valuable was the APA feature overall in helping you make decisions that reflected your values and priorities?
+                    </label>
+                    <div className="flex items-center space-x-4">
+                      <span className="text-xs text-gray-500 w-4">1</span>
+                      <input
+                        type="range"
+                        min="1"
+                        max="7"
+                        value={feedback.apaPerceivedValue}
+                        onChange={(e) => handleSliderChange('apaPerceivedValue', parseInt(e.target.value))}
+                        className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+                        disabled={isSubmitted}
+                      />
+                      <span className="text-xs text-gray-500 w-4">7</span>
+                      <div className="w-10 h-10 bg-lime-100 rounded-full flex items-center justify-center">
+                        <span className="text-base font-bold text-lime-600">{feedback.apaPerceivedValue}</span>
+                      </div>
+                    </div>
+                    <div className="flex justify-between text-xs text-gray-400 mt-1 px-8">
+                      <span>Not valuable</span>
+                      <span>Extremely valuable</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-gray-50 rounded-lg p-4">
+                <h4 className="text-sm font-semibold text-gray-800 mb-4">Cognitive Effort and Challenge</h4>
+
+                <div className="space-y-6">
+                  <div className="bg-white rounded-lg p-4 shadow-sm">
+                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                      Trade-off Challenge: How challenging was it to decide which moral values or simulation metrics should take priority when ranking them?
+                    </label>
+                    <div className="flex items-center space-x-4">
+                      <span className="text-xs text-gray-500 w-4">1</span>
+                      <input
+                        type="range"
+                        min="1"
+                        max="7"
+                        value={feedback.apaTradeoffChallenge}
+                        onChange={(e) => handleSliderChange('apaTradeoffChallenge', parseInt(e.target.value))}
+                        className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+                        disabled={isSubmitted}
+                      />
+                      <span className="text-xs text-gray-500 w-4">7</span>
+                      <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center">
+                        <span className="text-base font-bold text-amber-600">{feedback.apaTradeoffChallenge}</span>
+                      </div>
+                    </div>
+                    <div className="flex justify-between text-xs text-gray-400 mt-1 px-8">
+                      <span>Not challenging</span>
+                      <span>Very challenging</span>
+                    </div>
+                  </div>
+
+                  <div className="bg-white rounded-lg p-4 shadow-sm">
+                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                      Reflection Depth: To what extent did APA make you reflect on the trade-offs between different moral or operational values?
+                    </label>
+                    <div className="flex items-center space-x-4">
+                      <span className="text-xs text-gray-500 w-4">1</span>
+                      <input
+                        type="range"
+                        min="1"
+                        max="7"
+                        value={feedback.apaReflectionDepth}
+                        onChange={(e) => handleSliderChange('apaReflectionDepth', parseInt(e.target.value))}
+                        className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+                        disabled={isSubmitted}
+                      />
+                      <span className="text-xs text-gray-500 w-4">7</span>
+                      <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
+                        <span className="text-base font-bold text-orange-600">{feedback.apaReflectionDepth}</span>
+                      </div>
+                    </div>
+                    <div className="flex justify-between text-xs text-gray-400 mt-1 px-8">
+                      <span>Not at all</span>
+                      <span>A great deal</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+                  <MessageSquare className="h-4 w-4 mr-2 text-gray-500" />
+                  Tell us about your APA experience (optional)
+                  <button
+                    onMouseEnter={() => setShowApaTooltip(true)}
+                    onMouseLeave={() => setShowApaTooltip(false)}
+                    onClick={() => setShowApaTooltip(!showApaTooltip)}
+                    className="ml-2 text-green-500 hover:text-green-700 relative"
+                  >
+                    <Info className="h-4 w-4" />
+                    {showApaTooltip && (
+                      <div className="absolute left-0 top-6 z-10 w-80 bg-gray-900 text-white text-xs rounded-lg p-3 shadow-xl">
+                        <div className="space-y-2">
+                          <p>Which part of APA helped you understand your priorities better?</p>
+                          <p>Did ranking your preferences change how you approached the next scenario?</p>
+                          <p>What about APA did you find most useful or challenging?</p>
+                          <p>Did ranking your preferences change your next decisions?</p>
+                          <p>Where did APA feel most valuable?</p>
+                          <p>How could APA be improved?</p>
+                        </div>
+                      </div>
+                    )}
+                  </button>
+                </label>
+                <textarea
+                  value={feedback.apaComments}
+                  onChange={(e) => setFeedback(prev => ({ ...prev, apaComments: e.target.value }))}
+                  rows={4}
+                  disabled={isSubmitted}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  placeholder="What did you find most useful or challenging about APA? Did ranking your preferences change your next decisions? Where did APA feel most valuable? How could APA be improved?"
+                />
+              </div>
             </div>
           </div>
-        </div>
-        )}
+        )} */}
 
         <div className="bg-gradient-to-br from-orange-50 via-amber-100 to-yellow-50 rounded-lg shadow-lg border-2 border-orange-300 p-6 mb-8">
           <div className="flex items-center justify-between mb-6">
@@ -1569,22 +1594,20 @@ const FeedbackPage: React.FC = () => {
               <button
                 onClick={() => setFeedback(prev => ({ ...prev, usedTradeoffComparison: true }))}
                 disabled={isSubmitted}
-                className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all ${
-                  feedback.usedTradeoffComparison === true
-                    ? 'bg-orange-600 text-white shadow-lg'
-                    : 'bg-white text-gray-700 border-2 border-gray-300 hover:border-orange-400'
-                } disabled:opacity-50 disabled:cursor-not-allowed`}
+                className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all ${feedback.usedTradeoffComparison === true
+                  ? 'bg-orange-600 text-white shadow-lg'
+                  : 'bg-white text-gray-700 border-2 border-gray-300 hover:border-orange-400'
+                  } disabled:opacity-50 disabled:cursor-not-allowed`}
               >
                 Yes
               </button>
               <button
                 onClick={() => setFeedback(prev => ({ ...prev, usedTradeoffComparison: false }))}
                 disabled={isSubmitted}
-                className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all ${
-                  feedback.usedTradeoffComparison === false
-                    ? 'bg-orange-600 text-white shadow-lg'
-                    : 'bg-white text-gray-700 border-2 border-gray-300 hover:border-orange-400'
-                } disabled:opacity-50 disabled:cursor-not-allowed`}
+                className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all ${feedback.usedTradeoffComparison === false
+                  ? 'bg-orange-600 text-white shadow-lg'
+                  : 'bg-white text-gray-700 border-2 border-gray-300 hover:border-orange-400'
+                  } disabled:opacity-50 disabled:cursor-not-allowed`}
               >
                 No
               </button>
@@ -1593,247 +1616,243 @@ const FeedbackPage: React.FC = () => {
 
           {feedback.usedTradeoffComparison === true && (
             <div className="space-y-6">
-            <div className="bg-gray-50 rounded-lg p-4">
-              <h4 className="text-sm font-semibold text-gray-800 mb-4">Visualization (Radar & Bar Charts)</h4>
+              <div className="bg-gray-50 rounded-lg p-4">
+                <h4 className="text-sm font-semibold text-gray-800 mb-4">Visualization (Radar & Bar Charts)</h4>
 
-              <div className="space-y-6">
-                <div className="bg-white rounded-lg p-4 shadow-sm">
-                  <label className="block text-sm font-medium text-gray-700 mb-3">
-                    Visualization Clarity: How clear were the radar and bar chart visualizations?
-                  </label>
-                  <div className="flex items-center space-x-4">
-                    <span className="text-xs text-gray-500 w-4">1</span>
-                    <input
-                      type="range"
-                      min="1"
-                      max="7"
-                      value={feedback.vizClarity}
-                      onChange={(e) => handleSliderChange('vizClarity', parseInt(e.target.value))}
-                      className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
-                      disabled={isSubmitted}
-                    />
-                    <span className="text-xs text-gray-500 w-4">7</span>
-                    <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
-                      <span className="text-base font-bold text-orange-600">{feedback.vizClarity}</span>
-                    </div>
-                  </div>
-                  <div className="flex justify-between text-xs text-gray-400 mt-1 px-8">
-                    <span>Very unclear</span>
-                    <span>Very clear</span>
-                  </div>
-                </div>
-
-                <div className="bg-white rounded-lg p-4 shadow-sm">
-                  <label className="block text-sm font-medium text-gray-700 mb-3">
-                    Visualization Helpfulness: Did these visualizations help you make your decision?
-                  </label>
-                  <div className="flex gap-4">
-                    <button
-                      onClick={() => setFeedback(prev => ({ ...prev, vizHelpfulness: true }))}
-                      disabled={isSubmitted}
-                      className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all ${
-                        feedback.vizHelpfulness === true
-                          ? 'bg-orange-600 text-white shadow-lg'
-                          : 'bg-white text-gray-700 border-2 border-gray-300 hover:border-orange-400'
-                      } disabled:opacity-50 disabled:cursor-not-allowed`}
-                    >
-                      Yes
-                    </button>
-                    <button
-                      onClick={() => setFeedback(prev => ({ ...prev, vizHelpfulness: false }))}
-                      disabled={isSubmitted}
-                      className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all ${
-                        feedback.vizHelpfulness === false
-                          ? 'bg-orange-600 text-white shadow-lg'
-                          : 'bg-white text-gray-700 border-2 border-gray-300 hover:border-orange-400'
-                      } disabled:opacity-50 disabled:cursor-not-allowed`}
-                    >
-                      No
-                    </button>
-                  </div>
-                </div>
-
-                <div className="bg-white rounded-lg p-4 shadow-sm">
-                  <label className="block text-sm font-medium text-gray-700 mb-3">
-                    Visualization Usefulness in Decision-Making: How useful were the radar and bar chart visualizations in your decision-making process?
-                  </label>
-                  <div className="flex items-center space-x-4">
-                    <span className="text-xs text-gray-500 w-4">1</span>
-                    <input
-                      type="range"
-                      min="1"
-                      max="7"
-                      value={feedback.vizUsefulness}
-                      onChange={(e) => handleSliderChange('vizUsefulness', parseInt(e.target.value))}
-                      className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
-                      disabled={isSubmitted}
-                    />
-                    <span className="text-xs text-gray-500 w-4">7</span>
-                    <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center">
-                      <span className="text-base font-bold text-amber-600">{feedback.vizUsefulness}</span>
-                    </div>
-                  </div>
-                  <div className="flex justify-between text-xs text-gray-400 mt-1 px-8">
-                    <span>Not useful</span>
-                    <span>Very useful</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-gray-50 rounded-lg p-4">
-              <h4 className="text-sm font-semibold text-gray-800 mb-4">Trade-Off and Comparison Views</h4>
-
-              <div className="space-y-6">
-                <div className="bg-white rounded-lg p-4 shadow-sm">
-                  <label className="block text-sm font-medium text-gray-700 mb-3">
-                    Trade-Off Evaluation: How valuable were the trade-off comparisons and difference views in helping you evaluate your options?
-                  </label>
-                  <div className="flex items-center space-x-4">
-                    <span className="text-xs text-gray-500 w-4">1</span>
-                    <input
-                      type="range"
-                      min="1"
-                      max="7"
-                      value={feedback.vizTradeoffEvaluation}
-                      onChange={(e) => handleSliderChange('vizTradeoffEvaluation', parseInt(e.target.value))}
-                      className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
-                      disabled={isSubmitted}
-                    />
-                    <span className="text-xs text-gray-500 w-4">7</span>
-                    <div className="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center">
-                      <span className="text-base font-bold text-yellow-600">{feedback.vizTradeoffEvaluation}</span>
-                    </div>
-                  </div>
-                  <div className="flex justify-between text-xs text-gray-400 mt-1 px-8">
-                    <span>Not valuable</span>
-                    <span>Very valuable</span>
-                  </div>
-                </div>
-
-                <div className="bg-white rounded-lg p-4 shadow-sm">
-                  <label className="block text-sm font-medium text-gray-700 mb-3">
-                    Trade-Off Justification: How helpful were these trade-off views in helping you reach or justify a decision?
-                  </label>
-                  <div className="flex items-center space-x-4">
-                    <span className="text-xs text-gray-500 w-4">1</span>
-                    <input
-                      type="range"
-                      min="1"
-                      max="7"
-                      value={feedback.vizTradeoffJustification}
-                      onChange={(e) => handleSliderChange('vizTradeoffJustification', parseInt(e.target.value))}
-                      className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
-                      disabled={isSubmitted}
-                    />
-                    <span className="text-xs text-gray-500 w-4">7</span>
-                    <div className="w-10 h-10 bg-lime-100 rounded-full flex items-center justify-center">
-                      <span className="text-base font-bold text-lime-600">{feedback.vizTradeoffJustification}</span>
-                    </div>
-                  </div>
-                  <div className="flex justify-between text-xs text-gray-400 mt-1 px-8">
-                    <span>Not helpful</span>
-                    <span>Very helpful</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-gray-50 rounded-lg p-4">
-              <h4 className="text-sm font-semibold text-gray-800 mb-4">Expert Analyses and Recommendations</h4>
-
-              <div className="space-y-6">
-                <div className="bg-white rounded-lg p-4 shadow-sm">
-                  <label className="block text-sm font-medium text-gray-700 mb-3">
-                    Expert Guidance Usefulness: How useful were the expert analyses and recommendations in making your decisions?
-                  </label>
-                  <div className="flex items-center space-x-4">
-                    <span className="text-xs text-gray-500 w-4">1</span>
-                    <input
-                      type="range"
-                      min="1"
-                      max="7"
-                      value={feedback.vizExpertUsefulness}
-                      onChange={(e) => handleSliderChange('vizExpertUsefulness', parseInt(e.target.value))}
-                      className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
-                      disabled={isSubmitted}
-                    />
-                    <span className="text-xs text-gray-500 w-4">7</span>
-                    <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
-                      <span className="text-base font-bold text-orange-600">{feedback.vizExpertUsefulness}</span>
-                    </div>
-                  </div>
-                  <div className="flex justify-between text-xs text-gray-400 mt-1 px-8">
-                    <span>Not useful</span>
-                    <span>Very useful</span>
-                  </div>
-                </div>
-
-                <div className="bg-white rounded-lg p-4 shadow-sm">
-                  <label className="block text-sm font-medium text-gray-700 mb-3">
-                    Expert Confidence Impact: Did the expert analyses increase your confidence in your chosen options?
-                  </label>
-                  <div className="flex gap-4">
-                    <button
-                      onClick={() => setFeedback(prev => ({ ...prev, vizExpertConfidenceImpact: true }))}
-                      disabled={isSubmitted}
-                      className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all ${
-                        feedback.vizExpertConfidenceImpact === true
-                          ? 'bg-orange-600 text-white shadow-lg'
-                          : 'bg-white text-gray-700 border-2 border-gray-300 hover:border-orange-400'
-                      } disabled:opacity-50 disabled:cursor-not-allowed`}
-                    >
-                      Yes
-                    </button>
-                    <button
-                      onClick={() => setFeedback(prev => ({ ...prev, vizExpertConfidenceImpact: false }))}
-                      disabled={isSubmitted}
-                      className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all ${
-                        feedback.vizExpertConfidenceImpact === false
-                          ? 'bg-orange-600 text-white shadow-lg'
-                          : 'bg-white text-gray-700 border-2 border-gray-300 hover:border-orange-400'
-                      } disabled:opacity-50 disabled:cursor-not-allowed`}
-                    >
-                      No
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-lg p-4 shadow-sm">
-              <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
-                <MessageSquare className="h-4 w-4 mr-2 text-gray-500" />
-                Optional Open-Ended Reflection
-                <button
-                  onMouseEnter={() => setShowVizTooltip(true)}
-                  onMouseLeave={() => setShowVizTooltip(false)}
-                  onClick={() => setShowVizTooltip(!showVizTooltip)}
-                  className="ml-2 text-orange-500 hover:text-orange-700 relative"
-                >
-                  <Info className="h-4 w-4" />
-                  {showVizTooltip && (
-                    <div className="absolute left-0 top-6 z-10 w-80 bg-gray-900 text-white text-xs rounded-lg p-3 shadow-xl">
-                      <div className="space-y-2">
-                        <p>Which visualization or analysis tool helped you most?</p>
-                        <p>Did expert insights change your mind or reinforce your choice?</p>
-                        <p>How did trade-off comparisons influence your decision process?</p>
-                        <p>What could make these tools more intuitive or effective?</p>
+                <div className="space-y-6">
+                  <div className="bg-white rounded-lg p-4 shadow-sm">
+                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                      Visualization Clarity: How clear were the radar and bar chart visualizations?
+                    </label>
+                    <div className="flex items-center space-x-4">
+                      <span className="text-xs text-gray-500 w-4">1</span>
+                      <input
+                        type="range"
+                        min="1"
+                        max="7"
+                        value={feedback.vizClarity}
+                        onChange={(e) => handleSliderChange('vizClarity', parseInt(e.target.value))}
+                        className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+                        disabled={isSubmitted}
+                      />
+                      <span className="text-xs text-gray-500 w-4">7</span>
+                      <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
+                        <span className="text-base font-bold text-orange-600">{feedback.vizClarity}</span>
                       </div>
                     </div>
-                  )}
-                </button>
-              </label>
-              <textarea
-                value={feedback.vizComments}
-                onChange={(e) => setFeedback(prev => ({ ...prev, vizComments: e.target.value }))}
-                rows={4}
-                disabled={isSubmitted}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
-                placeholder="Which tool helped you most in making your decision? Did expert insights change or reinforce your choice? What could improve the visualizations or comparison tools?"
-              />
+                    <div className="flex justify-between text-xs text-gray-400 mt-1 px-8">
+                      <span>Very unclear</span>
+                      <span>Very clear</span>
+                    </div>
+                  </div>
+
+                  <div className="bg-white rounded-lg p-4 shadow-sm">
+                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                      Visualization Helpfulness: Did these visualizations help you make your decision?
+                    </label>
+                    <div className="flex gap-4">
+                      <button
+                        onClick={() => setFeedback(prev => ({ ...prev, vizHelpfulness: true }))}
+                        disabled={isSubmitted}
+                        className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all ${feedback.vizHelpfulness === true
+                          ? 'bg-orange-600 text-white shadow-lg'
+                          : 'bg-white text-gray-700 border-2 border-gray-300 hover:border-orange-400'
+                          } disabled:opacity-50 disabled:cursor-not-allowed`}
+                      >
+                        Yes
+                      </button>
+                      <button
+                        onClick={() => setFeedback(prev => ({ ...prev, vizHelpfulness: false }))}
+                        disabled={isSubmitted}
+                        className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all ${feedback.vizHelpfulness === false
+                          ? 'bg-orange-600 text-white shadow-lg'
+                          : 'bg-white text-gray-700 border-2 border-gray-300 hover:border-orange-400'
+                          } disabled:opacity-50 disabled:cursor-not-allowed`}
+                      >
+                        No
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="bg-white rounded-lg p-4 shadow-sm">
+                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                      Visualization Usefulness in Decision-Making: How useful were the radar and bar chart visualizations in your decision-making process?
+                    </label>
+                    <div className="flex items-center space-x-4">
+                      <span className="text-xs text-gray-500 w-4">1</span>
+                      <input
+                        type="range"
+                        min="1"
+                        max="7"
+                        value={feedback.vizUsefulness}
+                        onChange={(e) => handleSliderChange('vizUsefulness', parseInt(e.target.value))}
+                        className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+                        disabled={isSubmitted}
+                      />
+                      <span className="text-xs text-gray-500 w-4">7</span>
+                      <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center">
+                        <span className="text-base font-bold text-amber-600">{feedback.vizUsefulness}</span>
+                      </div>
+                    </div>
+                    <div className="flex justify-between text-xs text-gray-400 mt-1 px-8">
+                      <span>Not useful</span>
+                      <span>Very useful</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-gray-50 rounded-lg p-4">
+                <h4 className="text-sm font-semibold text-gray-800 mb-4">Trade-Off and Comparison Views</h4>
+
+                <div className="space-y-6">
+                  <div className="bg-white rounded-lg p-4 shadow-sm">
+                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                      Trade-Off Evaluation: How valuable were the trade-off comparisons and difference views in helping you evaluate your options?
+                    </label>
+                    <div className="flex items-center space-x-4">
+                      <span className="text-xs text-gray-500 w-4">1</span>
+                      <input
+                        type="range"
+                        min="1"
+                        max="7"
+                        value={feedback.vizTradeoffEvaluation}
+                        onChange={(e) => handleSliderChange('vizTradeoffEvaluation', parseInt(e.target.value))}
+                        className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+                        disabled={isSubmitted}
+                      />
+                      <span className="text-xs text-gray-500 w-4">7</span>
+                      <div className="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center">
+                        <span className="text-base font-bold text-yellow-600">{feedback.vizTradeoffEvaluation}</span>
+                      </div>
+                    </div>
+                    <div className="flex justify-between text-xs text-gray-400 mt-1 px-8">
+                      <span>Not valuable</span>
+                      <span>Very valuable</span>
+                    </div>
+                  </div>
+
+                  <div className="bg-white rounded-lg p-4 shadow-sm">
+                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                      Trade-Off Justification: How helpful were these trade-off views in helping you reach or justify a decision?
+                    </label>
+                    <div className="flex items-center space-x-4">
+                      <span className="text-xs text-gray-500 w-4">1</span>
+                      <input
+                        type="range"
+                        min="1"
+                        max="7"
+                        value={feedback.vizTradeoffJustification}
+                        onChange={(e) => handleSliderChange('vizTradeoffJustification', parseInt(e.target.value))}
+                        className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+                        disabled={isSubmitted}
+                      />
+                      <span className="text-xs text-gray-500 w-4">7</span>
+                      <div className="w-10 h-10 bg-lime-100 rounded-full flex items-center justify-center">
+                        <span className="text-base font-bold text-lime-600">{feedback.vizTradeoffJustification}</span>
+                      </div>
+                    </div>
+                    <div className="flex justify-between text-xs text-gray-400 mt-1 px-8">
+                      <span>Not helpful</span>
+                      <span>Very helpful</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-gray-50 rounded-lg p-4">
+                <h4 className="text-sm font-semibold text-gray-800 mb-4">Expert Analyses and Recommendations</h4>
+
+                <div className="space-y-6">
+                  <div className="bg-white rounded-lg p-4 shadow-sm">
+                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                      Expert Guidance Usefulness: How useful were the expert analyses and recommendations in making your decisions?
+                    </label>
+                    <div className="flex items-center space-x-4">
+                      <span className="text-xs text-gray-500 w-4">1</span>
+                      <input
+                        type="range"
+                        min="1"
+                        max="7"
+                        value={feedback.vizExpertUsefulness}
+                        onChange={(e) => handleSliderChange('vizExpertUsefulness', parseInt(e.target.value))}
+                        className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+                        disabled={isSubmitted}
+                      />
+                      <span className="text-xs text-gray-500 w-4">7</span>
+                      <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
+                        <span className="text-base font-bold text-orange-600">{feedback.vizExpertUsefulness}</span>
+                      </div>
+                    </div>
+                    <div className="flex justify-between text-xs text-gray-400 mt-1 px-8">
+                      <span>Not useful</span>
+                      <span>Very useful</span>
+                    </div>
+                  </div>
+
+                  <div className="bg-white rounded-lg p-4 shadow-sm">
+                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                      Expert Confidence Impact: Did the expert analyses increase your confidence in your chosen options?
+                    </label>
+                    <div className="flex gap-4">
+                      <button
+                        onClick={() => setFeedback(prev => ({ ...prev, vizExpertConfidenceImpact: true }))}
+                        disabled={isSubmitted}
+                        className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all ${feedback.vizExpertConfidenceImpact === true
+                          ? 'bg-orange-600 text-white shadow-lg'
+                          : 'bg-white text-gray-700 border-2 border-gray-300 hover:border-orange-400'
+                          } disabled:opacity-50 disabled:cursor-not-allowed`}
+                      >
+                        Yes
+                      </button>
+                      <button
+                        onClick={() => setFeedback(prev => ({ ...prev, vizExpertConfidenceImpact: false }))}
+                        disabled={isSubmitted}
+                        className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all ${feedback.vizExpertConfidenceImpact === false
+                          ? 'bg-orange-600 text-white shadow-lg'
+                          : 'bg-white text-gray-700 border-2 border-gray-300 hover:border-orange-400'
+                          } disabled:opacity-50 disabled:cursor-not-allowed`}
+                      >
+                        No
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-lg p-4 shadow-sm">
+                <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+                  <MessageSquare className="h-4 w-4 mr-2 text-gray-500" />
+                  Optional Open-Ended Reflection
+                  <button
+                    onMouseEnter={() => setShowVizTooltip(true)}
+                    onMouseLeave={() => setShowVizTooltip(false)}
+                    onClick={() => setShowVizTooltip(!showVizTooltip)}
+                    className="ml-2 text-orange-500 hover:text-orange-700 relative"
+                  >
+                    <Info className="h-4 w-4" />
+                    {showVizTooltip && (
+                      <div className="absolute left-0 top-6 z-10 w-80 bg-gray-900 text-white text-xs rounded-lg p-3 shadow-xl">
+                        <div className="space-y-2">
+                          <p>Which visualization or analysis tool helped you most?</p>
+                          <p>Did expert insights change your mind or reinforce your choice?</p>
+                          <p>How did trade-off comparisons influence your decision process?</p>
+                          <p>What could make these tools more intuitive or effective?</p>
+                        </div>
+                      </div>
+                    )}
+                  </button>
+                </label>
+                <textarea
+                  value={feedback.vizComments}
+                  onChange={(e) => setFeedback(prev => ({ ...prev, vizComments: e.target.value }))}
+                  rows={4}
+                  disabled={isSubmitted}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  placeholder="Which tool helped you most in making your decision? Did expert insights change or reinforce your choice? What could improve the visualizations or comparison tools?"
+                />
+              </div>
             </div>
-          </div>
           )}
         </div>
 
@@ -1852,22 +1871,20 @@ const FeedbackPage: React.FC = () => {
                 <button
                   onClick={() => setFeedback(prev => ({ ...prev, overallScenarioAlignment: true }))}
                   disabled={isSubmitted}
-                  className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all ${
-                    feedback.overallScenarioAlignment === true
-                      ? 'bg-purple-600 text-white shadow-lg'
-                      : 'bg-white text-gray-700 border-2 border-gray-300 hover:border-purple-400'
-                  } disabled:opacity-50 disabled:cursor-not-allowed`}
+                  className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all ${feedback.overallScenarioAlignment === true
+                    ? 'bg-purple-600 text-white shadow-lg'
+                    : 'bg-white text-gray-700 border-2 border-gray-300 hover:border-purple-400'
+                    } disabled:opacity-50 disabled:cursor-not-allowed`}
                 >
                   Yes
                 </button>
                 <button
                   onClick={() => setFeedback(prev => ({ ...prev, overallScenarioAlignment: false }))}
                   disabled={isSubmitted}
-                  className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all ${
-                    feedback.overallScenarioAlignment === false
-                      ? 'bg-purple-600 text-white shadow-lg'
-                      : 'bg-white text-gray-700 border-2 border-gray-300 hover:border-purple-400'
-                  } disabled:opacity-50 disabled:cursor-not-allowed`}
+                  className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all ${feedback.overallScenarioAlignment === false
+                    ? 'bg-purple-600 text-white shadow-lg'
+                    : 'bg-white text-gray-700 border-2 border-gray-300 hover:border-purple-400'
+                    } disabled:opacity-50 disabled:cursor-not-allowed`}
                 >
                   No
                 </button>
@@ -2071,14 +2088,14 @@ const FeedbackPage: React.FC = () => {
 
             {/* Hidden View Results button - kept for potential future use */}
             {false && (
-            <button
-              onClick={() => navigate('/view-results')}
-              className="bg-gradient-to-r from-green-600 to-teal-600 text-white font-semibold py-4 px-6 rounded-lg hover:from-green-700 hover:to-teal-700 transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center gap-3 group"
-            >
-              <BarChart2 className="h-6 w-6" />
-              <span>View Results</span>
-              <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
-            </button>
+              <button
+                onClick={() => navigate('/view-results')}
+                className="bg-gradient-to-r from-green-600 to-teal-600 text-white font-semibold py-4 px-6 rounded-lg hover:from-green-700 hover:to-teal-700 transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center gap-3 group"
+              >
+                <BarChart2 className="h-6 w-6" />
+                <span>View Results</span>
+                <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+              </button>
             )}
           </div>
         </div>
@@ -2172,11 +2189,10 @@ const FeedbackPage: React.FC = () => {
 
                     <div className="text-center mb-8">
                       <div className="inline-flex flex-col items-center p-6 bg-gradient-to-br from-purple-50 to-blue-50 rounded-xl border-2 border-purple-200">
-                        <div className={`text-5xl font-bold mb-2 ${
-                          overallStabilityScore >= 75 ? 'text-green-600' :
+                        <div className={`text-5xl font-bold mb-2 ${overallStabilityScore >= 75 ? 'text-green-600' :
                           overallStabilityScore >= 50 ? 'text-orange-600' :
-                          'text-red-600'
-                        }`}>
+                            'text-red-600'
+                          }`}>
                           {overallStabilityScore.toFixed(1)}%
                         </div>
                         <p className="text-lg font-semibold text-gray-800">Overall Value Stability Score</p>
@@ -2220,11 +2236,10 @@ const FeedbackPage: React.FC = () => {
                                 <p className="text-sm text-gray-600 mt-1">scenarios aligned with your values</p>
                               </div>
                               <div className="text-right">
-                                <div className={`text-4xl font-bold ${
-                                  alignmentPercentage >= 66 ? 'text-green-600' :
+                                <div className={`text-4xl font-bold ${alignmentPercentage >= 66 ? 'text-green-600' :
                                   alignmentPercentage >= 33 ? 'text-orange-600' :
-                                  'text-red-600'
-                                }`}>
+                                    'text-red-600'
+                                  }`}>
                                   {alignmentPercentage.toFixed(0)}%
                                 </div>
                               </div>
@@ -2255,21 +2270,19 @@ const FeedbackPage: React.FC = () => {
                               return (
                                 <div
                                   key={match.scenarioId}
-                                  className={`p-5 rounded-xl border-2 transition-all ${
-                                    isAligned
-                                      ? 'bg-green-50 border-green-300'
-                                      : 'bg-red-50 border-red-300'
-                                  }`}
+                                  className={`p-5 rounded-xl border-2 transition-all ${isAligned
+                                    ? 'bg-green-50 border-green-300'
+                                    : 'bg-red-50 border-red-300'
+                                    }`}
                                 >
                                   <div className="flex items-start justify-between mb-3">
                                     <div className="flex-1">
                                       <div className="flex items-center gap-3 mb-2">
                                         <span className="text-base font-bold text-gray-900">Scenario {match.scenarioId}</span>
-                                        <div className={`flex items-center gap-2 px-3 py-1 rounded-full font-bold text-xs ${
-                                          isAligned
-                                            ? 'bg-green-100 text-green-800 border border-green-300'
-                                            : 'bg-red-100 text-red-800 border border-red-300'
-                                        }`}>
+                                        <div className={`flex items-center gap-2 px-3 py-1 rounded-full font-bold text-xs ${isAligned
+                                          ? 'bg-green-100 text-green-800 border border-green-300'
+                                          : 'bg-red-100 text-red-800 border border-red-300'
+                                          }`}>
                                           {isAligned ? (
                                             <CheckCircle2 className="h-3.5 w-3.5" />
                                           ) : (
@@ -2352,7 +2365,7 @@ const FeedbackPage: React.FC = () => {
                                 },
                                 ticks: {
                                   font: { size: 12 },
-                                  callback: function(value) {
+                                  callback: function (value) {
                                     return value + '%';
                                   }
                                 }
@@ -2413,7 +2426,7 @@ const FeedbackPage: React.FC = () => {
                                 boxHeight: 12,
                                 boxPadding: 6,
                                 callbacks: {
-                                  label: function(context) {
+                                  label: function (context) {
                                     return context.dataset.label + ': ' + context.parsed.y.toFixed(0) + '%';
                                   }
                                 }
@@ -2515,13 +2528,12 @@ const FeedbackPage: React.FC = () => {
                             <p className="text-sm text-gray-600 mb-1">Nuclear Power Station</p>
                             <div className="w-full bg-gray-200 rounded-full h-2.5">
                               <div
-                                className={`h-2.5 rounded-full ${
-                                  finalMetrics.nuclearPowerStation < 30
-                                    ? 'bg-red-600'
-                                    : finalMetrics.nuclearPowerStation < 70
-                                      ? 'bg-yellow-600'
-                                      : 'bg-green-600'
-                                }`}
+                                className={`h-2.5 rounded-full ${finalMetrics.nuclearPowerStation < 30
+                                  ? 'bg-red-600'
+                                  : finalMetrics.nuclearPowerStation < 70
+                                    ? 'bg-yellow-600'
+                                    : 'bg-green-600'
+                                  }`}
                                 style={{ width: `${finalMetrics.nuclearPowerStation}%` }}
                               ></div>
                             </div>

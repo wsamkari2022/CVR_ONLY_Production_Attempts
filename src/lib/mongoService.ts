@@ -1,440 +1,354 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000/api';
+const API = import.meta.env.VITE_API_URL || "http://localhost:4002";
 
-export interface UserSession {
-  session_id: string;
-  user_id?: string;
-  demographics?: any;
-  age?: number;
-  gender?: string;
-  ai_experience?: string;
-  moral_reasoning_experience?: string;
-  consent_agreed?: boolean;
-  consent_timestamp?: string;
+// ---- Session Manager (single source of truth) ----
+let cachedSessionId: string | null = null;
+
+function createNewSessionId(): string {
+  // @ts-ignore
+  if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID();
+  return "sess_" + Date.now() + "_" + Math.random().toString(36).slice(2);
 }
 
-export interface BaselineValue {
-  session_id: string;
-  value_name: string;
-  match_percentage: number;
-  rank_order: number;
-  value_type?: string;
+function getOrCreateSessionId(): string {
+  if (cachedSessionId) return cachedSessionId;
+
+  let id = localStorage.getItem("session_id");
+  if (!id) {
+    id = createNewSessionId();
+    localStorage.setItem("session_id", id);
+  }
+  cachedSessionId = id;
+  return id;
 }
 
-export interface ScenarioInteraction {
-  session_id: string;
-  scenario_id: number;
-  scenario_title: string;
-  event_type: string;
-  option_id?: string;
-  option_label?: string;
-  option_title?: string;
-  is_aligned?: boolean;
-  time_since_scenario_start?: number;
-  switch_count?: number;
-  alternatives_explored?: boolean;
-  radar_chart_viewed?: boolean;
-  event_data?: any;
-}
+export const MongoService = {
+  // ✅ Always use this to get the same id across pages
+  getSessionId(): string {
+    return getOrCreateSessionId();
+  },
 
-export interface CVRResponse {
-  session_id: string;
-  scenario_id: number;
-  option_id: string;
-  option_label: string;
-  cvr_question: string;
-  user_answer: boolean;
-  response_time_ms?: number;
-  decision_changed_after?: boolean;
-  comparison_data?: any;
-}
+  async createUserSession(payload: {
+    session_id: string;
+    ExperimentCondition: string;
+    demographics: {
+      age: string;
+      gender: string;
+      aiExperience: string;
+      moralReasoningExperience: string;
+    };
+    consent_agreed: boolean;
+    consent_timestamp?: string;
+  }) {
+    const res = await fetch(`${API}/api/user-sessions`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json().catch(() => ({} as any));
+    if (!res.ok) {
+      throw new Error(data?.error || "Failed to create user session");
+    }
+    return data; // { ok: true, id: "..." }
+  },
+  async insertValueEvolution(payload: {
+    session_id: string;
+    value_list_snapshot: { name: string; matchPercentage: number }[];
+    // scenario_id optional from the page; server will default to 0
+    scenario_id?: number;
+  }) {
+    const res = await fetch(`${API}/api/value-evolution`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json().catch(() => ({} as any));
+    if (!res.ok) throw new Error(data?.error || "Failed to save value evolution");
+    return data; // { ok: true, id: "..." }
+  },
 
-export interface APAReordering {
-  session_id: string;
-  scenario_id: number;
-  preference_type: string;
-  values_before: any;
-  values_after: any;
-  time_spent_ms?: number;
-  triggered_by_option?: string;
-  subsequent_option_selected?: string;
-  was_from_top_two?: boolean;
-}
+  async insertScenarioInteraction(payload: {
+    session_id: string;
+    scenario_id: number;
+    event_type: string;
+    option_id?: string;
+    option_label?: string;
+    option_title?: string;
+    is_aligned?: boolean;
+    time_since_start_ms?: number;
+    switch_count?: number;
+  }) {
+    const res = await fetch(`${API}/api/scenario-interactions`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json().catch(() => ({} as any));
+    if (!res.ok) throw new Error(data?.error || "Failed to save scenario interaction");
+    return data;
+  },
 
-export interface FinalDecision {
-  session_id: string;
-  scenario_id: number;
-  scenario_title: string;
-  option_id: string;
-  option_label: string;
-  option_title: string;
-  is_aligned: boolean;
-  from_top_two_ranked?: boolean;
-  total_switches?: number;
-  total_time_seconds: number;
-  cvr_visited?: boolean;
-  cvr_visit_count?: number;
-  cvr_yes_answers?: number;
-  apa_reordered?: boolean;
-  apa_reorder_count?: number;
-  alternatives_explored?: boolean;
-  final_metrics?: any;
-  infeasible_options_checked?: any;
-}
+  async insertCVRResponse(payload: {
+    session_id: string;
+    scenario_id: number;
+    cvr_question: string;
+    user_answer: boolean;
+    response_time_ms?: number;
+    decision_changed_after?: boolean;
+    option_id?: string;
+    option_label?: string;
+  }) {
+    const res = await fetch(`${API}/api/cvr-responses`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json().catch(() => ({} as any));
+    if (!res.ok) throw new Error(data?.error || "Failed to save CVR response");
+    return data;
+  },
 
-export interface ValueEvolution {
-  session_id: string;
-  scenario_id?: number;
-  value_list_snapshot: any;
-  change_trigger?: string;
-  change_type?: string;
-  deviation_from_baseline?: number;
-}
+  async insertAPAReordering(payload: {
+    session_id: string;
+    scenario_id: number;
+    preference_type: "moral_values" | "simulation_metrics";
+    values_before: string[];
+    values_after: string[];
+    reorder_count?: number;
+  }) {
+    const res = await fetch(`${API}/api/apa-reorderings`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json().catch(() => ({} as any));
+    if (!res.ok) throw new Error(data?.error || "Failed to save APA reordering");
+    return data;
+  },
 
-export interface SessionFeedback {
-  session_id: string;
-  cvr_initial_reconsideration?: boolean | null;
-  cvr_final_reconsideration?: boolean | null;
-  cvr_purpose_clarity?: number;
-  cvr_confidence_change?: number;
-  cvr_helpfulness?: number;
-  cvr_clarity?: number;
-  cvr_comfort_level?: number;
-  cvr_perceived_value?: number;
-  cvr_overall_impact?: number;
-  cvr_comments?: string;
-  apa_purpose_clarity?: number;
-  apa_ease_of_use?: number;
-  apa_control_understanding?: number;
-  apa_decision_reflection?: boolean | null;
-  apa_scenario_alignment?: boolean | null;
-  apa_comparison_usefulness?: number;
-  apa_perspective_value?: number;
-  apa_confidence_after_reordering?: number;
-  apa_perceived_value?: number;
-  apa_tradeoff_challenge?: number;
-  apa_reflection_depth?: number;
-  apa_comments?: string;
-  viz_clarity?: number;
-  viz_helpfulness?: boolean | null;
-  viz_usefulness?: number;
-  viz_tradeoff_evaluation?: number;
-  viz_tradeoff_justification?: number;
-  viz_expert_usefulness?: number;
-  viz_expert_confidence_impact?: boolean | null;
-  viz_comments?: string;
-  overall_scenario_alignment?: boolean | null;
-  overall_decision_satisfaction?: number;
-  overall_process_satisfaction?: number;
-  overall_confidence_consistency?: number;
-  overall_learning_insight?: number;
-  overall_comments?: string;
-  value_consistency_index?: number;
-  performance_composite?: number;
-  balance_index?: number;
-  cvr_arrivals?: number;
-  cvr_yes_count?: number;
-  cvr_no_count?: number;
-  apa_reorderings?: number;
-  total_switches?: number;
-  avg_decision_time?: number;
-  scenarios_final_decision_labels?: string[];
-  checking_alignment_list?: string[];
-}
+  async insertFinalDecision(payload: {
+    session_id: string;
+    scenario_id: number;
+    scenario_title?: string;
 
-export interface SessionMetrics {
-  session_id: string;
-  cvr_arrivals: number;
-  cvr_yes_count: number;
-  cvr_no_count: number;
-  apa_reorderings: number;
-  misalign_after_cvr_apa_count: number;
-  realign_after_cvr_apa_count: number;
-  switch_count_total: number;
-  avg_decision_time: number;
-  decision_times: number[];
-  value_consistency_index: number;
-  performance_composite: number;
-  balance_index: number;
-  final_alignment_by_scenario: boolean[];
-  value_order_trajectories: Array<{
-    scenarioId: number;
-    values: string[];
-    preferenceType: string;
-  }>;
-  scenario_details: Array<{
-    scenarioId: number;
-    finalChoice: string;
-    aligned: boolean;
-    switches: number;
-    timeSeconds: number;
-    cvrVisited: boolean;
-    cvrVisitCount: number;
-    cvrYesAnswers: number;
-    apaReordered: boolean;
-    apaReorderCount: number;
-  }>;
-  scenarios_final_decision_labels?: string[];
-  checking_alignment_list?: string[];
-  final_values?: string[];
-  moral_values_reorder_list?: string[];
-  scenario1_moral_value_reordered?: any[];
-  scenario2_moral_value_reordered?: any[];
-  scenario3_moral_value_reordered?: any[];
-  scenario3_infeasible_options?: any[];
-}
+    option_id: string;
+    option_label: string;
+    option_title?: string;
 
-export class MongoService {
-  static async createUserSession(data: UserSession) {
-    try {
-      const insertData: any = {
-        session_id: data.session_id,
-        user_id: data.user_id,
-        demographics: data.demographics
+    is_aligned: boolean;
+    from_top_two_ranked?: boolean;
+
+    total_switches?: number;
+    total_time_seconds?: number;
+
+    cvr_visited?: boolean;
+    cvr_visit_count?: number;
+    cvr_yes_answers?: number;
+
+    apa_reordered?: boolean;
+    apa_reorder_count?: number;
+
+    alternatives_explored?: number;
+
+    final_metrics?: any; // { livesSaved, humanCasualties, ... }
+    infeasible_options_checked?: Array<{ id: string; label: string; title: string; checked: boolean }>;
+  }) {
+    const res = await fetch(`${API}/api/final-decisions`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json().catch(() => ({} as any));
+    if (!res.ok) throw new Error(data?.error || "Failed to save final decision");
+    return data;
+  },
+
+  async insertSessionMetrics(payload: {
+    session_id: string;
+
+    // summary & indices
+    cvrArrivals: number;
+    cvrYesCount: number;
+    cvrNoCount: number;
+    apaReorderings: number;
+    misalignAfterCvrApaCount: number;
+    realignAfterCvrApaCount: number;
+
+    switchCountTotal: number;
+    avgDecisionTime: number;
+    decisionTimes: number[];
+
+    valueConsistencyIndex: number;
+    performanceComposite: number;
+    balanceIndex: number;
+    finalAlignmentByScenario: boolean[];
+
+    // // tables
+    scenarioDetails: Array<{
+      scenarioId: number;
+      finalChoice: string;
+      aligned: boolean;
+      switches: number;
+      timeSeconds: number;
+      cvrVisited: boolean;
+      cvrVisitCount: number;
+      cvrYesAnswers: number;
+      apaReordered: boolean;
+      apaReorderCount: number;
+    }>;
+    valueOrderTrajectories: Array<{
+      scenarioId: number;
+      values: string[];
+      preferenceType: string;
+    }>;
+
+    // debug tracking table lists
+
+    debug_tracking: {
+      rows: Array<{
+        scenarioId: number;
+        valueListsUsed: {
+          scenarioMoralValueReorderedName: string;
+          scenarioMoralValueReordered: string[];
+          finalTopTwoValues: string[];
+          infeasibleOptions?: Array<{ title: string; label: string; checked: boolean }>;
+        };
+        finalDecisionLabel: string;
+        alignmentStatus: string;
+        flagsAtConfirmation: {
+          apaReordered: boolean;
+          cvrYes: boolean;
+          cvrNo: boolean;
+          simMetricsReordered: boolean;
+          moralValuesReordered: boolean;
+        };
+        interactionCounters: {
+          apaReorders: number;
+          cvrYesCount: number;
+          cvrNoCount: number;
+          alternativesAdded: number;
+          switches: number;
+        };
+      }>;
+    };
+  }) {
+    const res = await fetch(`${API}/api/session-metrics`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json().catch(() => ({} as any));
+    if (!res.ok) throw new Error(data?.error || "Failed to upsert session metrics");
+    return data; // { ok: true, id: "..." }
+  },
+
+  async insertSessionFeedback(payload: {
+    session_id: string;
+    cvr: {
+      initialReconsideration: boolean | null;
+      finalReconsideration: boolean | null;
+      purposeClarity: number;
+      confidenceChange: number;
+      helpfulness: number;
+      clarity: number;
+      comfortLevel: number;
+      perceivedValue: number;
+      overallImpact: number;
+      comments: string;
+    };
+    // apa: {
+    //   purposeClarity: number;
+    //   easeOfUse: number;
+    //   controlUnderstanding: number;
+    //   decisionReflection: boolean | null;
+    //   scenarioAlignment: boolean | null;
+    //   comparisonUsefulness: number;
+    //   perspectiveValue: number;
+    //   confidenceAfterReordering: number;
+    //   perceivedValue: number;
+    //   tradeoffChallenge: number;
+    //   reflectionDepth: number;
+    //   comments: string;
+    // };
+    visualization: {
+      usedTradeoffComparison: boolean | null;
+      clarity: number;
+      usefulness: number;
+      tradeoffEvaluation: number;
+      tradeoffJustification: number;
+      expertUsefulness: number;
+      helpfulness: boolean | null;
+      expertConfidenceImpact: boolean | null;
+      comments: string;
+    };
+    overall: {
+      scenarioAlignment: boolean | null;
+      decisionSatisfaction: number;
+      processSatisfaction: number;
+      confidenceConsistency: number;
+      learningInsight: number;
+      comments: string;
+    };
+    metricsSnapshot: {
+      valueConsistencyIndex: number;
+      performanceComposite: number;
+      balanceIndex: number;
+      cvrArrivals: number;
+      cvrYesCount: number;
+      cvrNoCount: number;
+      //apaReorderings: number;
+      totalSwitches: number;
+      avgDecisionTime: number;
+      scenariosFinalDecisionLabels: string[];
+      checkingAlignmentList: string[];
+    };
+  }) {
+    const res = await fetch(`${API}/api/session-feedback`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json().catch(() => ({} as any));
+    if (!res.ok) throw new Error(data?.error || "Failed to upsert session feedback");
+    return data;
+  },
+
+  async updateUserSession(sessionId: string, fields: Record<string, any>) {
+    const res = await fetch(`${API}/api/user-sessions/${encodeURIComponent(sessionId)}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(fields),
+    });
+    const data = await res.json().catch(() => ({} as any));
+    if (!res.ok) throw new Error(data?.error || "Failed to update user session");
+    return data;
+  },
+
+  async insertValueStability(payload: {
+    session_id: string;
+    overallStabilityScorePercent: number; // e.g., 86.7
+    weights: { explicitWeight: number; implicitWeight: number }; // e.g., {0.4, 0.6}
+    scenarios: Array<{
+      scenarioId: number;
+      scenarioLabel?: string;
+      selectedValue: string;
+      matches: {
+        explicitValuesMatch: boolean;
+        implicitValuesMatch: boolean;
+        simulationValuesMatch: boolean;
       };
+      stabilityStatus: string; // "Stable" | "Unstable"
+      scorePercent: number;    // 0..100
+    }>;
+    summary?: { totalStableCount: number; totalScenarios: number };
+  }) {
+    const res = await fetch(`${API}/api/value-stability`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json().catch(() => ({} as any));
+    if (!res.ok) throw new Error(data?.error || "Failed to upsert value stability");
+    return data; // { ok: true, id: "..." }
+  },
 
-      if (data.consent_agreed !== undefined) {
-        insertData.consent_agreed = data.consent_agreed;
-      }
-
-      if (data.consent_timestamp) {
-        insertData.consent_timestamp = data.consent_timestamp;
-      }
-
-      if (data.demographics) {
-        insertData.age = parseInt(data.demographics.age);
-        insertData.gender = data.demographics.gender;
-        insertData.ai_experience = data.demographics.aiExperience;
-        insertData.moral_reasoning_experience = data.demographics.moralReasoningExperience;
-      }
-
-      const response = await fetch(`${API_BASE_URL}/user-sessions`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(insertData)
-      });
-
-      const result = await response.json();
-
-      if (!response.ok || !result.success) {
-        console.error('Error creating user session:', result);
-        return null;
-      }
-
-      return result.data;
-    } catch (error) {
-      console.error('Exception creating user session:', error);
-      return null;
-    }
-  }
-
-  static async updateUserSession(sessionId: string, updates: Partial<UserSession> & { is_completed?: boolean; completed_at?: string; status?: string; study_fully_completed?: boolean }) {
-    try {
-      const response = await fetch(`${API_BASE_URL}/user-sessions/${sessionId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updates)
-      });
-
-      const result = await response.json();
-
-      if (!response.ok || !result.success) {
-        console.error('Error updating user session:', result);
-      }
-    } catch (error) {
-      console.error('Exception updating user session:', error);
-    }
-  }
-
-  static async updateSessionStatus(sessionId: string, statusData: { status?: string; completed_at?: string; study_fully_completed?: boolean }) {
-    return this.updateUserSession(sessionId, statusData);
-  }
-
-  static async insertBaselineValues(values: BaselineValue[]) {
-    try {
-      const response = await fetch(`${API_BASE_URL}/baseline-values`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(values)
-      });
-
-      const result = await response.json();
-
-      if (!response.ok || !result.success) {
-        console.error('Error inserting baseline values:', result);
-        return false;
-      }
-
-      return true;
-    } catch (error) {
-      console.error('Exception inserting baseline values:', error);
-      return false;
-    }
-  }
-
-  static async insertScenarioInteraction(interaction: ScenarioInteraction) {
-    try {
-      const response = await fetch(`${API_BASE_URL}/scenario-interactions`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(interaction)
-      });
-
-      const result = await response.json();
-
-      if (!response.ok || !result.success) {
-        console.error('Error inserting scenario interaction:', result);
-        return false;
-      }
-
-      return true;
-    } catch (error) {
-      console.error('Exception inserting scenario interaction:', error);
-      return false;
-    }
-  }
-
-  static async insertCVRResponse(response: CVRResponse) {
-    try {
-      const apiResponse = await fetch(`${API_BASE_URL}/cvr-responses`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(response)
-      });
-
-      const result = await apiResponse.json();
-
-      if (!apiResponse.ok || !result.success) {
-        console.error('Error inserting CVR response:', result);
-        return false;
-      }
-
-      return true;
-    } catch (error) {
-      console.error('Exception inserting CVR response:', error);
-      return false;
-    }
-  }
-
-  static async insertAPAReordering(reordering: APAReordering) {
-    try {
-      const response = await fetch(`${API_BASE_URL}/apa-reorderings`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(reordering)
-      });
-
-      const result = await response.json();
-
-      if (!response.ok || !result.success) {
-        console.error('Error inserting APA reordering:', result);
-        return false;
-      }
-
-      return true;
-    } catch (error) {
-      console.error('Exception inserting APA reordering:', error);
-      return false;
-    }
-  }
-
-  static async insertFinalDecision(decision: FinalDecision) {
-    try {
-      const response = await fetch(`${API_BASE_URL}/final-decisions`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(decision)
-      });
-
-      const result = await response.json();
-
-      if (!response.ok || !result.success) {
-        console.error('Error inserting final decision:', result);
-        return false;
-      }
-
-      return true;
-    } catch (error) {
-      console.error('Exception inserting final decision:', error);
-      return false;
-    }
-  }
-
-  static async insertValueEvolution(evolution: ValueEvolution) {
-    try {
-      const response = await fetch(`${API_BASE_URL}/value-evolution`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(evolution)
-      });
-
-      const result = await response.json();
-
-      if (!response.ok || !result.success) {
-        console.error('Error inserting value evolution:', result);
-        return false;
-      }
-
-      return true;
-    } catch (error) {
-      console.error('Exception inserting value evolution:', error);
-      return false;
-    }
-  }
-
-  static async insertSessionFeedback(feedback: SessionFeedback) {
-    try {
-      const response = await fetch(`${API_BASE_URL}/session-feedback`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(feedback)
-      });
-
-      const result = await response.json();
-
-      if (!response.ok || !result.success) {
-        console.error('Error inserting session feedback:', result);
-        return false;
-      }
-
-      return true;
-    } catch (error) {
-      console.error('Exception inserting session feedback:', error);
-      return false;
-    }
-  }
-
-  static async insertSessionMetrics(metrics: SessionMetrics) {
-    try {
-      const response = await fetch(`${API_BASE_URL}/session-metrics`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(metrics)
-      });
-
-      const result = await response.json();
-
-      if (!response.ok || !result.success) {
-        console.error('Error inserting session metrics:', result);
-        return false;
-      }
-
-      return true;
-    } catch (error) {
-      console.error('Exception inserting session metrics:', error);
-      return false;
-    }
-  }
-
-  static generateSessionId(): string {
-    return `session_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-  }
-
-  static getSessionId(): string {
-    let sessionId = localStorage.getItem('currentSessionId');
-    if (!sessionId) {
-      sessionId = this.generateSessionId();
-      localStorage.setItem('currentSessionId', sessionId);
-    }
-    return sessionId;
-  }
-}
+};

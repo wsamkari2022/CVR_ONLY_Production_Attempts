@@ -1,30 +1,26 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose from "mongoose";
 
-export interface IValueEvolution extends Document {
-  session_id: string;
-  scenario_id?: number;
-  value_list_snapshot: any;
-  change_trigger?: string;
-  change_type?: string;
-  deviation_from_baseline?: number;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-const ValueEvolutionSchema: Schema = new Schema(
+const ValueSnapshotItemSchema = new mongoose.Schema(
   {
-    session_id: { type: String, required: true, index: true },
-    scenario_id: { type: Number },
-    value_list_snapshot: { type: Schema.Types.Mixed, required: true },
-    change_trigger: { type: String },
-    change_type: { type: String },
-    deviation_from_baseline: { type: Number }
+    name: { type: String, required: true },               // e.g., "Safety"
+    matchPercentage: { type: Number, required: true },    // e.g., 85
   },
-  {
-    timestamps: true
-  }
+  { _id: false }
 );
 
-ValueEvolutionSchema.index({ session_id: 1, scenario_id: 1 });
+const ValueEvolutionSchema = new mongoose.Schema(
+  {
+    session_id: { type: String, required: true, index: true },
 
-export default mongoose.model<IValueEvolution>('ValueEvolution', ValueEvolutionSchema);
+    // optional; if not provided by frontend we’ll default to 0 in the route
+    scenario_id: { type: Number, default: 0 },
+
+    // exactly what your page sends
+    value_list_snapshot: { type: [ValueSnapshotItemSchema], default: [] },
+
+    created_at: { type: Date, default: Date.now },
+  },
+  { versionKey: false }
+);
+
+export const ValueEvolution = mongoose.model("value_evolution", ValueEvolutionSchema);

@@ -247,14 +247,10 @@ const ValuesPage: React.FC = () => {
                 value_type: 'stable'
             }));
 
-            await MongoService.insertBaselineValues(baselineValues);
 
             await MongoService.insertValueEvolution({
                 session_id: sessionId,
-                scenario_id: 0,
                 value_list_snapshot: topTwoValues,
-                change_trigger: 'baseline_established',
-                change_type: 'initial'
             });
 
             navigate('/tutorial');

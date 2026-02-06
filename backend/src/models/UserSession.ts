@@ -1,42 +1,28 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose from "mongoose";
 
-export interface IUserSession extends Document {
-  session_id: string;
-  user_id?: string;
-  demographics?: any;
-  age?: number;
-  gender?: string;
-  ai_experience?: string;
-  moral_reasoning_experience?: string;
-  consent_agreed?: boolean;
-  consent_timestamp?: string;
-  is_completed?: boolean;
-  completed_at?: string;
-  status?: string;
-  study_fully_completed?: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-const UserSessionSchema: Schema = new Schema(
+const UserSessionSchema = new mongoose.Schema(
   {
-    session_id: { type: String, required: true, unique: true, index: true },
-    user_id: { type: String },
-    demographics: { type: Schema.Types.Mixed },
-    age: { type: Number, min: 18, max: 120 },
-    gender: { type: String },
-    ai_experience: { type: String },
-    moral_reasoning_experience: { type: String },
-    consent_agreed: { type: Boolean },
+    session_id: { type: String, required: true, index: true, unique: true },
+    ExperimentCondition: { type: String, required: true, index: true },
+    demographics: {
+      age: String,
+      gender: String,
+      aiExperience: String,
+      moralReasoningExperience: String
+    },
+
+    // convenience (derived) fields
+    age: Number,
+    gender: String,
+    ai_experience: String,
+    moral_reasoning_experience: String,
+
+    consent_agreed: { type: Boolean, default: false },
     consent_timestamp: { type: String },
-    is_completed: { type: Boolean, default: false },
-    completed_at: { type: String },
-    status: { type: String, default: 'in_progress' },
-    study_fully_completed: { type: Boolean, default: false }
+
+    created_at: { type: Date, default: Date.now }
   },
-  {
-    timestamps: true
-  }
+  { versionKey: false }
 );
 
-export default mongoose.model<IUserSession>('UserSession', UserSessionSchema);
+export const UserSession = mongoose.model("user_sessions", UserSessionSchema);

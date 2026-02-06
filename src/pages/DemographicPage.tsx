@@ -106,13 +106,16 @@ const DemographicPage: React.FC = () => {
 
     localStorage.setItem('userDemographics', JSON.stringify(formData));
 
-    const sessionId = MongoService.generateSessionId();
-    localStorage.setItem('currentSessionId', sessionId);
+    const session_id = MongoService.getSessionId();
+    localStorage.setItem('currentSessionId', session_id);
 
     const consentData = JSON.parse(localStorage.getItem('userConsent') || '{}');
 
+    const ExperimentCondition = "2"; // Fixed string value for ExperimentCondition
+
     await MongoService.createUserSession({
-      session_id: sessionId,
+      session_id: session_id,
+      ExperimentCondition, // Add the fixed string value here
       demographics: formData,
       consent_agreed: consentData.agreed || false,
       consent_timestamp: consentData.timestamp

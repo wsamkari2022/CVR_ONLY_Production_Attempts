@@ -1,9 +1,12 @@
 import { Router, Request, Response } from "express";
-import { SessionFeedback } from "../models/SessionFeedback";
+import { ValueStability } from "../models/ValueStability";
 
 const router = Router();
 
-/** Upsert by session_id so you always have exactly one feedback doc per session */
+/**
+ * Upsert by session_id so each session has exactly one Value Stability doc.
+ * Body shape must match the model.
+ */
 router.post("/", async (req: Request, res: Response) => {
   try {
     const { session_id } = req.body || {};
@@ -11,7 +14,7 @@ router.post("/", async (req: Request, res: Response) => {
       return res.status(400).json({ ok: false, error: "Missing session_id" });
     }
 
-    const doc = await SessionFeedback.findOneAndUpdate(
+    const doc = await ValueStability.findOneAndUpdate(
       { session_id },
       { $set: req.body },
       { upsert: true, new: true }

@@ -1,27 +1,20 @@
-import { Router, Request, Response } from 'express';
-import CVRResponse from '../models/CVRResponse';
+import { Router, Request, Response } from "express";
+import { CVRResponse } from "../models/CVRResponse";
 
 const router = Router();
 
-router.post('/', async (req: Request, res: Response) => {
+// POST /api/cvr-responses
+router.post("/", async (req: Request, res: Response) => {
   try {
-    const cvrResponse = new CVRResponse(req.body);
-    const savedResponse = await cvrResponse.save();
-    res.status(201).json({ success: true, data: savedResponse });
-  } catch (error: any) {
-    console.error('Error creating CVR response:', error);
-    res.status(500).json({ success: false, message: 'Failed to create CVR response', error: error.message });
-  }
-});
-
-router.get('/session/:session_id', async (req: Request, res: Response) => {
-  try {
-    const { session_id } = req.params;
-    const responses = await CVRResponse.find({ session_id }).sort({ createdAt: 1 });
-    res.json({ success: true, data: responses });
-  } catch (error: any) {
-    console.error('Error fetching CVR responses:', error);
-    res.status(500).json({ success: false, message: 'Failed to fetch CVR responses', error: error.message });
+    const body = req.body ?? {};
+    if (!body.session_id || body.scenario_id === undefined || body.cvr_question === undefined || body.user_answer === undefined) {
+      return res.status(400).json({ ok: false, error: "session_id, scenario_id, cvr_question, user_answer are required" });
+    }
+    const doc = await CVRResponse.create(body);
+    res.status(201).json({ ok: true, id: doc._id });
+  } catch (err: any) {
+    console.error("POST /api/cvr-responses error:", err);
+    res.status(500).json({ ok: false, error: err.message });
   }
 });
 

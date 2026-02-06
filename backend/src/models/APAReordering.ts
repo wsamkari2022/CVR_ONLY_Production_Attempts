@@ -1,36 +1,20 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose from "mongoose";
 
-export interface IAPAReordering extends Document {
-  session_id: string;
-  scenario_id: number;
-  preference_type: string;
-  values_before: any;
-  values_after: any;
-  time_spent_ms?: number;
-  triggered_by_option?: string;
-  subsequent_option_selected?: string;
-  was_from_top_two?: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-const APAReorderingSchema: Schema = new Schema(
+const APAReorderingSchema = new mongoose.Schema(
   {
     session_id: { type: String, required: true, index: true },
     scenario_id: { type: Number, required: true },
-    preference_type: { type: String, required: true },
-    values_before: { type: Schema.Types.Mixed, required: true },
-    values_after: { type: Schema.Types.Mixed, required: true },
-    time_spent_ms: { type: Number },
-    triggered_by_option: { type: String },
-    subsequent_option_selected: { type: String },
-    was_from_top_two: { type: Boolean }
+
+    preference_type: { type: String, required: true }, // "moral_values" | "simulation_metrics"
+    values_before: [{ type: String, default: [] }],
+    values_after: [{ type: String, default: [] }],
+
+    // count/flags (if you track per-scenario counters)
+    reorder_count: { type: Number },
+
+    created_at: { type: Date, default: Date.now }
   },
-  {
-    timestamps: true
-  }
+  { versionKey: false }
 );
 
-APAReorderingSchema.index({ session_id: 1, scenario_id: 1 });
-
-export default mongoose.model<IAPAReordering>('APAReordering', APAReorderingSchema);
+export const APAReordering = mongoose.model("apa_reorderings", APAReorderingSchema);
